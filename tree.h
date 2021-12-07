@@ -79,8 +79,8 @@ union DATA {
 
 struct node_data {
 	DATA value;
-	int len = -1;
 	int data_type = 5;
+	int len = -1;
 };
 
 typedef node_data tval_t;

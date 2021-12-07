@@ -8,7 +8,10 @@ enum DATA_TYPES {
         UOPER        = 3,
 	ID           = 4,
         UNKNOWN_TYPE = 5,
-	TERM         = 6
+	TERM         = 6,
+	IF           = 7,
+	ELSE         = 8,
+	RELOP        = 9
 };                     
 
 enum operators {
@@ -19,5 +22,6 @@ enum operators {
 	OP_PWR = '^',
 	OP_EQ  = '='
 };
+
 
 #endif // TERMINALS_H

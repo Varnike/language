@@ -15,6 +15,8 @@
 #define NUM(node_name) 				(node_name)->data.value.num
 #define STR(node_name) 				(node_name)->data.value.str
 #define TYPE(node_name)				(node_name)->data.data_type
+#define ID(node_name)				(node_name)->data.value.id
+#define LEN(node_name)				(node_name)->data.len
 
 #define DATA_ID(node_name)			(node_name).value.id
 #define DATA_NUM(node_name)			(node_name).value.num
@@ -48,7 +50,7 @@ public:
 	double GetP();
 	double GetN();
 	
-	int parse();
+	TNODE *getNextToken();
 private:
 	int Require(char cmp_symb);
 	int SyntaxError();
@@ -59,6 +61,7 @@ private:
 
 	int isOP(char symb);
 	int isTerm(node_data ndata);
+	int isTerminalChar(char symb);
 
 	textBuff btext = {};
 	char *str   = nullptr;

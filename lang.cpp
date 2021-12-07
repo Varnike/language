@@ -7,11 +7,10 @@ lang::lang(char *namein)
 	init("check.txt");
 
 	str = btext.buff;
-	parse();
+	TNODE *token = NULL;
 
-	for (int i = 0; i != token_arr.size; i++) {
-		print_token(token_arr.data[i]);
-	}
+	while ((token = getNextToken()) != NULL)
+		print_token(token);
 }
 
 lang::~lang()
@@ -33,49 +32,41 @@ int lang::init(const char *file_in)
 	fclose(btext.file_in);
 }
 
-int lang::parse()
+TNODE *lang::getNextToken()
 {
-	CHECK_(str == nullptr, LANG_NULLPTR_ERR);
+	CHECK_SET_ERR(str == nullptr, LANG_NULLPTR_ERR, NULL);
 	
 	node_data node_val = {};
-
-	token_arr.data = (TNODE **)calloc(MAX_TOKEN_CNT, sizeof(TNODE *));
-
+	
 	while (*str != '\0') {
 $		if (isspace(*str)) {
 			str++;
 			continue;
-		}
-		else if (isdigit(*str))
+		} else if (isdigit(*str)) {
 			node_val = parse_no();
-		else if (isalpha(*str))
+		} else if (isalpha(*str)) {
 			node_val = parse_id();
-		else if (isOP(*str))
+		} else if (isOP(*str)) {
 			node_val = parse_op();
-		else 
-			;//TODO smth
-		
-		ERRNUM_CHECK(ERRNUM);
-		
-		if (token_arr.size >= MAX_TOKEN_CNT) {
-			ERRNUM = LANG_BUFFER_OVERFLOW;
-			goto err_free_buffer;
+		} else if (isTerminalChar(*str)){
+			DATA_ID(node_val)  = str++;
+			node_val.len       = 1;
+			node_val.data_type = TERM;
 		}
+		
+		ERRNUM_CHECK(NULL);
+		
+		TNODE *node = NULL;
+		TreeCtor(&node, node_val);
 
-		TreeCtor((token_arr.data + token_arr.size++), node_val);
+		return node;
 	}
 
-	return 0; // TODO ???
-
-err_free_buffer:
-	free(token_arr.data);
-	
-	return ERRNUM;
+	return NULL; // TODO ???
 }
 
 node_data lang::parse_no()
-{//TODO read double values
-	$
+{$
 	node_data tmp_data = {};
 
 	double val = strtod(str, &str);	
@@ -94,25 +85,13 @@ $	node_data tmp_data = {};
 	
 	CHECK_SET_ERR(!str, LANG_NULLPTR_ERR, tmp_data);	
 
-	//char *token_str	 = (char *)calloc(MAX_ID_LEN, sizeof(char));
-	//CHECK_SET_ERR(!str, CALLOC_ERR, tmp_data);
 	DATA_ID(tmp_data) = str;
-
 	int it = 0;
 
 	while (isdigit(*str) || isalpha(*str)) {
-		//token_str[it++] = *str++;
 		str++;
 		it++;
-		/*if (it >= MAX_ID_LEN - 1) {
-			free(token_str);
-			ERRNUM = LANG_BUFFER_OVERFLOW;
-
-			return tmp_data;
-		}*/
 	}
-
-	//token_str[it] = '\0';
 
 	if (isTerm(tmp_data))
 		tmp_data.data_type = TERM;
@@ -125,17 +104,22 @@ $	node_data tmp_data = {};
 }
 
 node_data lang::parse_op()
-{//TODO char *
-$	char op = *str++;
+{
+$	node_data tmp_data = {};
+	tmp_data.data_type = OPER;
+	DATA_ID(tmp_data)  = str;
 
-	node_data tmp_data = {data_un_c(op), OPER};
+	while (isOP(*str))
+		str++;
+
+	tmp_data.len = str - DATA_ID(tmp_data);
 
 	return tmp_data;
 }
 
 int lang::isOP(char symb)
 {
-$	return (symb == OP_ADD || symb == OP_MUL || symb == OP_DIV || 
+	return (symb == OP_ADD || symb == OP_MUL || symb == OP_DIV || 
 			symb == OP_SUB || symb == OP_PWR || symb == OP_EQ);
 }
 
@@ -145,6 +129,11 @@ int lang::isTerm(node_data ndata)
 		return 1;
 	
 	return 0;
+}
+
+int lang::isTerminalChar(char symb)
+{
+	return (symb == '(' || symb == ')' || symb == '{' || symb == '}' || symb == ';' || symb == '$');
 }
 
 static void print_token(TNODE *node) {
@@ -157,22 +146,24 @@ static void print_token(TNODE *node) {
 		printf("data : [  %lg  ], ", node->data.value.num);
 		break;
 	case OPER:
-		printf("data : [  %c  ], ", node->data.value.str);
+		printf("data : [  %.*s  ], ", LEN(node), ID(node));
 		break;
+	case TERM:
 	case ID:
-		printf("data : [  %s  ], ", node->data.value.id);
+		printf("data : [  %.*s  ], ", LEN(node), ID(node));
 		break;
 	default:
 		break;
 	}
 
 	printf("\n");
-//	fprintf(fout, "\tleft : [  %p  ],\tright : [  %p  ],\tparent : [  %p  ]\n", 
-//			node->left, node->right, node->parent);                             
-
+#if 0
+	fprintf(fout, "\tleft : [  %p  ],\tright : [  %p  ],\tparent : [  %p  ]\n", 
+			node->left, node->right, node->parent);                             
+#endif
 }
 
-double lang::GetG()
+TNODE *lang::GetG()
 {$
 	double val = GetE();
 	Require(*str == '$');
@@ -180,7 +171,7 @@ double lang::GetG()
 	return val;
 }
 
-double lang::GetE()
+TNODE *lang::GetE()
 {$
 	double val = GetT();
 
@@ -197,7 +188,7 @@ double lang::GetE()
 	return val;
 }
 
-double lang::GetT()
+TNODE *lang::GetT()
 {$
 	double val = GetP();
 	
@@ -214,12 +205,12 @@ double lang::GetT()
 	return val;
 }
 
-double lang::GetP()
-{$
+TNODE *lang::GetP()
+{
 	if (*str == '(') {
-		(str)++;
+		str++;
 
-		int val = lang::GetE();
+		TNODE *token = lang::GetE();
 		Require(*str == ')');
 		(str)++;
 
@@ -229,28 +220,25 @@ double lang::GetP()
 	}
 }
 
-double lang::GetN()
-{$
-	double val = 0;
+TNODE *lang::GetN()
+{
 	int cnt = 0;
+	TNODE *token = getNextToken();
 
-	while ('0' <= *str && *str <= '9') {
-		val = val * 10 + (*str - '0');
+	if (token && TYPE(token) == CONST)
+		return token;
 
-		(str)++;
-		cnt++;
-	}
-
-	if (cnt == 0)
-		SyntaxError();
-
-	return val;
+	return NULL;
 }
 
 int lang::Require(char cmp_symb)
 {
-	if (*str != cmp_symb)
+	if (*str != cmp_symb) {
 		SyntaxError();
+		return 0;
+	}
+
+	return 1;
 }
 
 int lang::SyntaxError()
