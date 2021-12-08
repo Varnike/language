@@ -238,14 +238,28 @@ void TreeDotDump(TNODE *node)
 		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"lightskyblue\" >%lg", node->data.value.num);
 		break;
 	case OPER:
-		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"olivedrab3\" >%c", node->data.value.str);
+		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"olivedrab3\" > %.*s", 
+				node->data.len, node->data.value.id);
 		break;
+
 	case VAR:
 		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"orchid\" >%c", node->data.value.str);
 		break;
 	case UOPER:
 		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"saddlebrown\" >%s", 
 				get_unoper_name(node->data.value.str));
+		break;
+	case IF:
+	case ELSE:
+	case WHILE:
+	case ID:
+
+		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"orchid\" > %.*s", 
+				node->data.len, node->data.value.id);
+		break;
+	case RELOP:
+		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"orchid\" > %s", 
+				getRelopName(node->data.value.num));
 		break;
 
 	default:
@@ -329,4 +343,21 @@ const char *get_unoper_name(int type)
 		ERRNUM = DIFF_UNKNOWN_OPER;
 		return NULL;
 	}
+}
+
+const char *getRelopName(int type)
+{
+	if (type >= 6 || type < 0)
+		return NULL;
+
+	const char *relops_names[] = {
+		"<",
+		"<=",
+		"=",
+		"!=",
+		">",
+		">="
+	};
+	
+	return relops_names[type];
 }

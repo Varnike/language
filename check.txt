@@ -1,1 +1,1 @@
-size1 = x + 23
+if (size) {x = size - 8}$

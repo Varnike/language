@@ -119,4 +119,5 @@ void VisitPrint(TNODE *node, FILE *fout = stdout);
 int TreeCheck(TNODE *node);
 const char *get_unoper_name(int type); 
 
+const char *getRelopName(int type);
 #endif // TREE_H

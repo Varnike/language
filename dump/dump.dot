@@ -1,0 +1,44 @@
+digraph dump_graph {
+	rankdir=TV; 
+node0x56509b9e3c70 [shape=plaintext
+					label=<<table border='1' cellborder='1'>
+			<tr><td colspan="2" bgcolor="orchid" > size</td></tr>
+					<tr><td port= "lchild">L:(nil)</td><td port="rchild">R: (nil)</td></tr>
+				</table>>];
+node0x56509b9e3bf0 [shape=plaintext
+					label=<<table border='1' cellborder='1'>
+			<tr><td colspan="2" bgcolor="orchid" > if</td></tr>
+					<tr><td port= "lchild">L:0x56509b9e3c70</td><td port="rchild">R: 0x56509b9e3d70</td></tr>
+				</table>>];
+		node0x56509b9e3bf0:lchild -> node0x56509b9e3c70[style=bold, arrowhead=vee];
+		node0x56509b9e3bf0:rchild -> node0x56509b9e3d70[style=bold, arrowhead=vee];
+node0x56509b9e3d30 [shape=plaintext
+					label=<<table border='1' cellborder='1'>
+			<tr><td colspan="2" bgcolor="orchid" > x</td></tr>
+					<tr><td port= "lchild">L:(nil)</td><td port="rchild">R: (nil)</td></tr>
+				</table>>];
+node0x56509b9e3d70 [shape=plaintext
+					label=<<table border='1' cellborder='1'>
+			<tr><td colspan="2" bgcolor="olivedrab3" > =</td></tr>
+					<tr><td port= "lchild">L:0x56509b9e3d30</td><td port="rchild">R: 0x56509b9e3df0</td></tr>
+				</table>>];
+		node0x56509b9e3d70:lchild -> node0x56509b9e3d30[style=bold, arrowhead=vee];
+		node0x56509b9e3d70:rchild -> node0x56509b9e3df0[style=bold, arrowhead=vee];
+node0x56509b9e3db0 [shape=plaintext
+					label=<<table border='1' cellborder='1'>
+			<tr><td colspan="2" bgcolor="orchid" > size</td></tr>
+					<tr><td port= "lchild">L:(nil)</td><td port="rchild">R: (nil)</td></tr>
+				</table>>];
+node0x56509b9e3df0 [shape=plaintext
+					label=<<table border='1' cellborder='1'>
+			<tr><td colspan="2" bgcolor="olivedrab3" > -</td></tr>
+					<tr><td port= "lchild">L:0x56509b9e3db0</td><td port="rchild">R: 0x56509b9e3e30</td></tr>
+				</table>>];
+		node0x56509b9e3df0:lchild -> node0x56509b9e3db0[style=bold, arrowhead=vee];
+		node0x56509b9e3df0:rchild -> node0x56509b9e3e30[style=bold, arrowhead=vee];
+node0x56509b9e3e30 [shape=plaintext
+					label=<<table border='1' cellborder='1'>
+			<tr><td colspan="2" bgcolor="lightskyblue" >8</td></tr>
+					<tr><td port= "lchild">L:(nil)</td><td port="rchild">R: (nil)</td></tr>
+				</table>>];
+}

@@ -15,11 +15,22 @@
 #define NUM(node_name) 				(node_name)->data.value.num
 #define STR(node_name) 				(node_name)->data.value.str
 #define TYPE(node_name)				(node_name)->data.data_type
+#define ID(node_name)				(node_name)->data.value.id
+#define LEN(node_name)				(node_name)->data.len
 
 #define DATA_ID(node_name)			(node_name).value.id
 #define DATA_NUM(node_name)			(node_name).value.num
 
-const int MAX_TOKEN_CNT = 100; 
+#define TOKEN					token_arr.data[IT]
+#define IT					token_arr.it
+#define SIZE					token_arr.size
+
+#define SYMB_MATCH(type, symb)			(TYPE(TOKEN) == type && LEN(TOKEN) == 1 && ID(TOKEN)[0] == symb)
+
+#define SyntaxError()				_SyntaxError(__func__, __LINE__)
+
+const int MAX_TOKEN_CNT = 100;
+
 const int MAX_ID_LEN    = 100;
 
 /*
@@ -31,8 +42,16 @@ const int MAX_ID_LEN    = 100;
  * 3) TODO errs check
  * 4) TODO ? list from parsing
  */
+
+/* real problems
+ *	TODO	multiple lines stmts
+ *	TODO	terminal type(LT LE EQ and s.o.)
+ *	TODO	some print func to other file
+ *	TODO	err checks in Get* functions	
+ */
 struct parsed_arr {
 	TNODE **data = nullptr;
+	int it   = 0;
 	int size = 0;
 };
 
@@ -42,21 +61,26 @@ public:
 	~lang();
 	
 	int init(const char *file_in);
-	double GetG();
-	double GetE();
-	double GetT();
-	double GetP();
-	double GetN();
-	
+	TNODE *GetG();
+	TNODE *GetStmt();
+	TNODE *GetE();
+	TNODE *GetT();
+	TNODE *GetP();
+	TNODE *GetN();
+	TNODE *GetId();
+	TNODE *GetRel();
+
 	int parse();
 private:
 	int Require(char cmp_symb);
-	int SyntaxError();
+	int _SyntaxError(const char *func, const int line);
 	
 	node_data parse_op();
 	node_data parse_no();
 	node_data parse_id();
+	node_data process_relop();
 
+	int isTerminalChar(char symb);
 	int isOP(char symb);
 	int isTerm(node_data ndata);
 
