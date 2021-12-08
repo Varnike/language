@@ -29,16 +29,16 @@ enum operators {
 	OP_DIV = '/',
 	OP_SUB = '-',
 	OP_PWR = '^',
-	OP_EQ  = '='
+	OP_ASG = '='
 };
 
 enum relops {
-	LT = 0,
-	LE = 1,
-	EQ = 2,
-	NE = 3,
-	GT = 4,
-	GE = 5
+	RELOP_LT = 0,
+	RELOP_LE = 1,
+	RELOP_EQ = 2,
+	RELOP_NE = 3,
+	RELOP_GT = 4,
+	RELOP_GE = 5
 };
 /*
 struct _sample {

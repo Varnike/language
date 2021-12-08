@@ -7,7 +7,7 @@ lang::lang(char *namein)
 	init("check.txt");
 
 	str = btext.buff;
-	parse();
+	lexer_process();
 
 	for (int i = 0; i != token_arr.size; i++) {
 		print_token(token_arr.data[i]);
@@ -41,7 +41,7 @@ int lang::init(const char *file_in)
 	fclose(btext.file_in);
 }
 
-int lang::parse()
+int lang::lexer_process()
 {
 	CHECK_(str == nullptr, LANG_NULLPTR_ERR);
 	
@@ -54,19 +54,20 @@ $		if (isspace(*str)) {
 			str++;
 			continue;
 		} else if (isdigit(*str)) {
-			node_val = parse_no();
+			node_val = tokenize_no();
 		} else if (isalpha(*str)) {
-			node_val = parse_id();
+			node_val = tokenize_id();
 		} else if (isOP(*str)) {
-			node_val = parse_op();
+			node_val = tokenize_op();
 		} else if (isTerminalChar(*str)){
 			DATA_ID(node_val)  = str++;
 			node_val.len       = 1;
 			node_val.data_type = TERM;
-		} else if (*str == '=' || *str == '>' || *str == '<') {
-			//node_val = process_relop();			
-		} else 
-			assert(!"LOL"); // TODO
+		} else if (isRelop(*str)) {
+			node_val = tokenize_relop();			
+		} else {
+			SyntaxError();
+		}
 
 		ERRNUM_CHECK(ERRNUM);
 		
@@ -85,8 +86,8 @@ err_free_buffer:
 	return ERRNUM;
 }
 
-node_data lang::parse_no()
-{//TODO read double values
+node_data lang::tokenize_no()
+{
 	$
 	node_data tmp_data = {};
 
@@ -100,7 +101,7 @@ node_data lang::parse_no()
 	return tmp_data;
 }
 
-node_data lang::parse_id()
+node_data lang::tokenize_id()
 {	
 $	node_data tmp_data = {};
 	
@@ -125,12 +126,12 @@ $	node_data tmp_data = {};
 	
 	return tmp_data;
 }
-
-node_data lang::parse_op()
+//TODO WTF WTF WTF
+node_data lang::tokenize_op()
 {
 $	node_data tmp_data = {};
 	tmp_data.data_type = OPER;
-	DATA_ID(tmp_data)  = str;
+	DATA_NUM(tmp_data) = *str;
 
 	while (isOP(*str))
 		str++;
@@ -139,16 +140,73 @@ $	node_data tmp_data = {};
 
 	return tmp_data;
 }
+//TODO macros
+node_data lang::tokenize_relop()
+{
+	node_data tmp_data = {};
+	tmp_data.data_type = RELOP;
 
+	switch (*str++) {
+	case '=':
+		if (*str == '=') {
+			str++;
+			DATA_NUM(tmp_data) = RELOP_EQ;
+			return tmp_data;
+		} else {
+			DATA_ID(tmp_data)  = str - 1;
+			tmp_data.len       = 1;
+			tmp_data.data_type = OPER;
+			return tmp_data;
+		}
+		break;
+	case '!':
+		if (*str == '=') {
+			str++;
+			DATA_NUM(tmp_data) = RELOP_NE;
+			return tmp_data;
+		} else {
+			SyntaxError();
+		}
+		break;
+	case '<':
+		if (*str == '=') {
+			str++;
+			DATA_NUM(tmp_data) = RELOP_LE;
+			return tmp_data;
+		} else {
+			DATA_NUM(tmp_data) = RELOP_LT;
+			return tmp_data;
+		}
+		break;
+	case '>':
+		if (*str == '=') {
+			str++;
+			DATA_NUM(tmp_data) = RELOP_GE;
+			return tmp_data;
+		} else {
+			DATA_NUM(tmp_data) = RELOP_GT;
+			return tmp_data;
+		}
+		break;
+	default:
+		SyntaxError(); // TODO Lexer Error!
+		break;
+	}
+}
 int lang::isOP(char symb)
 {
 $	return (symb == OP_ADD || symb == OP_MUL || symb == OP_DIV || 
-			symb == OP_SUB || symb == OP_PWR || symb == OP_EQ);
+			symb == OP_SUB || symb == OP_PWR);
 }
 
 int lang::isTerminalChar(char symb)
 {
 	return (symb == '(' || symb == ')' || symb == '{' || symb == '}' || symb == ';' || symb == '$');
+}
+
+int lang::isRelop(char symb)
+{
+	return symb == '=' || symb == '>' || symb == '<' || symb == '!';
 }
 
 int lang::isTerm(node_data ndata)
@@ -230,7 +288,7 @@ TNODE *lang::GetStmt()
 			IT++;
 			Require('(');
 			IT++;
-			TNODE *expr = GetE();
+			TNODE *expr = GetRel();
 
 			Require(')');
 			IT++;
@@ -272,8 +330,8 @@ TNODE *lang::GetRel()
 		CHECK_SET_ERR(!relop, LANG_NULLPTR_ERR, NULL);
 		CHECK_SET_ERR(!token, LANG_NULLPTR_ERR, NULL);
 
-		relop->right = token;
-		relop->left  = token2;
+		relop->right = token2;
+		relop->left  = token;
 
 		token->parent  = relop;
 		token2->parent = relop;
@@ -334,7 +392,7 @@ TNODE *lang::GetP()
 	if (TYPE(TOKEN) == TERM && ID(TOKEN)[0] == '(') {
 		IT++;
 
-		TNODE *token = lang::GetE();
+		TNODE *token = lang::GetRel();
 
 		Require(')');
 		IT++;
@@ -369,12 +427,14 @@ TNODE *lang::GetId()
 	}
 }
 
-int lang::Require(char cmp_symb)
+int lang::_Require(char cmp_symb, const char *func, const int line)
 {
-	if (LEN(TOKEN) == 1 && ID(TOKEN)[0] == cmp_symb)
+	if (LEN(TOKEN) == 1 && ID(TOKEN)[0] == cmp_symb) {
 		return 1;
-	else 
+	} else  {
+		printf("Require failed on line %d, function %s\n", line, func);
 		SyntaxError();
+	}
 }
 
 int lang::_SyntaxError(const char *func, const int line)

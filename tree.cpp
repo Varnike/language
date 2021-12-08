@@ -353,7 +353,7 @@ const char *getRelopName(int type)
 	const char *relops_names[] = {
 		"<",
 		"<=",
-		"=",
+		"==",
 		"!=",
 		">",
 		">="

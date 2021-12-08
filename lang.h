@@ -28,6 +28,7 @@
 #define SYMB_MATCH(type, symb)			(TYPE(TOKEN) == type && LEN(TOKEN) == 1 && ID(TOKEN)[0] == symb)
 
 #define SyntaxError()				_SyntaxError(__func__, __LINE__)
+#define Require(ch)				_Require(ch, __func__, __LINE__);
 
 const int MAX_TOKEN_CNT = 100;
 
@@ -48,6 +49,8 @@ const int MAX_ID_LEN    = 100;
  *	TODO	terminal type(LT LE EQ and s.o.)
  *	TODO	some print func to other file
  *	TODO	err checks in Get* functions	
+ *	TODO ?  where =?
+ *	TODO	
  */
 struct parsed_arr {
 	TNODE **data = nullptr;
@@ -70,19 +73,20 @@ public:
 	TNODE *GetId();
 	TNODE *GetRel();
 
-	int parse();
+	int lexer_process();
 private:
-	int Require(char cmp_symb);
+	int _Require(char cmp_symb, const char *func, const int line);
 	int _SyntaxError(const char *func, const int line);
 	
-	node_data parse_op();
-	node_data parse_no();
-	node_data parse_id();
-	node_data process_relop();
+	node_data tokenize_op();
+	node_data tokenize_no();
+	node_data tokenize_id();
+	node_data tokenize_relop();
 
 	int isTerminalChar(char symb);
 	int isOP(char symb);
 	int isTerm(node_data ndata);
+	int isRelop(char symb);
 
 	textBuff btext = {};
 	char *str   = nullptr;
