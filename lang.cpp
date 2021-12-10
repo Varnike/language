@@ -46,12 +46,22 @@ int lang::lexer_process()
 	CHECK_(str == nullptr, LANG_NULLPTR_ERR);
 	
 	node_data node_val = {};
-
+	
 	token_arr.data = (TNODE **)calloc(MAX_TOKEN_CNT, sizeof(TNODE *));
+	int comment_flag = 0;
 
 	while (*str != '\0') {
 $		if (isspace(*str)) {
+			if (*str == '\n')
+				comment_flag = 0;
 			str++;
+			continue;
+		} else if (comment_flag) {
+			*str++;
+			continue;
+		} else if (*str == '#') {
+			str++;
+			comment_flag = 1; 
 			continue;
 		} else if (isdigit(*str)) {
 			node_val = tokenize_no();
@@ -130,19 +140,15 @@ $	node_data tmp_data = {};
 node_data lang::tokenize_op()
 {
 $	node_data tmp_data = {};
+
 	tmp_data.data_type = OPER;
-	DATA_NUM(tmp_data) = *str;
-
-	while (isOP(*str))
-		str++;
-
-	tmp_data.len = str - DATA_ID(tmp_data);
-
+	DATA_NUM(tmp_data) = *str++;
+	
 	return tmp_data;
 }
 //TODO macros
 node_data lang::tokenize_relop()
-{
+{	
 	node_data tmp_data = {};
 	tmp_data.data_type = RELOP;
 
@@ -153,8 +159,7 @@ node_data lang::tokenize_relop()
 			DATA_NUM(tmp_data) = RELOP_EQ;
 			return tmp_data;
 		} else {
-			DATA_ID(tmp_data)  = str - 1;
-			tmp_data.len       = 1;
+			DATA_NUM(tmp_data) = OP_ASG;
 			tmp_data.data_type = OPER;
 			return tmp_data;
 		}
@@ -232,7 +237,7 @@ static void print_token(TNODE *node)
 		printf("data : [  %lg  ], ", node->data.value.num);
 		break;
 	case OPER:
-		printf("data : [  %.*s  ], ", LEN(node), ID(node));
+		printf("data : [  %c  ], ", STR(node));
 		break;
 	case TERM:
 	case IF:
@@ -242,7 +247,7 @@ static void print_token(TNODE *node)
 		printf("data : [  %.*s  ], ", LEN(node), ID(node));
 		break;
 	case RELOP:
-		printf("data : [  %s  ]  ", getRelopName(NUM(node)));
+		printf("data : [  %s  ]  ", getRelopName(STR(node)));
 		break;
 	default:
 		break;
@@ -254,11 +259,36 @@ static void print_token(TNODE *node)
 
 TNODE *lang::GetG()
 {$
-	TNODE *token = GetStmt();
-	Require('$');
-	IT++;
+	TNODE *token = NULL;
+	TreeCtor(&token);
+	/*
+	while(1) {
+		if (ID_MATCH('$'))
+			return token;
+		GetStmt();
+		Require(';');
+		IT++;
+	}
+	*/
+	token = GetStmts();
 
+	Require('$');
 	return token;
+}
+
+TNODE *lang::GetStmts()
+{
+	TNODE *node = 0;
+	if (ID_MATCH('$') || ID_MATCH('}')) {
+		return node;
+	} else {
+		TreeCtor(&node);
+		TYPE(node) = CONST;
+		NUM(node)  = 1488;
+		node->right = GetStmt();
+		node->left  = GetStmts();
+		return node;
+	}
 }
 
 TNODE *lang::GetStmt()
@@ -268,7 +298,8 @@ TNODE *lang::GetStmt()
 		{
 			TNODE *id = GetId();
 			
-			Require('=');
+			if (!SYMB_MATCH(OPER, OP_ASG))
+				SyntaxError();
 
 			TNODE *assign = TOKEN;
 			IT++;
@@ -279,22 +310,25 @@ TNODE *lang::GetStmt()
 			id->parent    = assign;
 			expr->parent  = assign;
 			
+			Require(';');
+
 			return assign;
 		}
 		break;
 	case IF:
 		{
+			$
 			TNODE *cond = TOKEN;
 			IT++;
 			Require('(');
-			IT++;
+			
 			TNODE *expr = GetRel();
-
+$
 			Require(')');
-			IT++;
+			
 			
 			TNODE *stmt = GetStmt();
-			
+$			
 			cond->left  = expr;
 			cond->right = stmt;
 	
@@ -304,16 +338,36 @@ TNODE *lang::GetStmt()
 	case TERM:
 		{
 			Require('{');
-			IT++;
-			TNODE *stmt = GetStmt();
+	
+			TNODE *stmt = GetStmts();
 			Require('}');
-			IT++;
+
 
 			return stmt;
 		}
 		break;
+	case WHILE:
+		{
+			TNODE *whileloop = TOKEN;
+			IT++;
+			Require('(');
+		
+			TNODE *expr = GetRel();
+			Require(')');
+			
+
+			TNODE *stmt = GetStmt();
+
+			whileloop->left  = expr;
+			whileloop->right = stmt;	
+
+			return whileloop;
+		}
 	default:
-		return GetE();
+		TNODE *node = GetE();
+		Require(';');
+		
+		return node;
 		break;
 	}
 }
@@ -368,7 +422,7 @@ TNODE *lang::GetT()
 	
 	CHECK_SET_ERR(!token, LANG_NULLPTR_ERR, NULL);	
 
-	while(SYMB_MATCH(OPER, '*') || SYMB_MATCH(OPER, '/')) {
+	while(SYMB_MATCH(OPER, OP_MUL) || SYMB_MATCH(OPER, OP_DIV)) {
 		TNODE *op = TOKEN;
 		IT++;
 
@@ -394,8 +448,7 @@ TNODE *lang::GetP()
 
 		TNODE *token = lang::GetRel();
 
-		Require(')');
-		IT++;
+		Require(')');	
 
 		return token;
 	} else if (TYPE(TOKEN) == CONST){
@@ -430,9 +483,11 @@ TNODE *lang::GetId()
 int lang::_Require(char cmp_symb, const char *func, const int line)
 {
 	if (LEN(TOKEN) == 1 && ID(TOKEN)[0] == cmp_symb) {
+		IT++;
 		return 1;
 	} else  {
-		printf("Require failed on line %d, function %s\n", line, func);
+		printf("Require [ %c ] but got [ %c ].\n Error: failed on line %d, function %s\n", 
+				 cmp_symb, ID(TOKEN)[0], line, func);
 		SyntaxError();
 	}
 }

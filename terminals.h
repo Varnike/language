@@ -12,7 +12,8 @@ enum DATA_TYPES {
 	IF           = 7,
 	ELSE         = 8,
 	WHILE        = 9,
-	RELOP        = 10
+	RELOP        = 10,
+	TREE_TOKEN   = 11
 	/*
 	LT           = 10,
 	LE           = 11,
@@ -40,6 +41,11 @@ enum relops {
 	RELOP_GT = 4,
 	RELOP_GE = 5
 };
+
+enum tree_tokens {
+	STATEMENT = 0,
+	CALL      = 1
+}; 
 /*
 struct _sample {
 	const int type;

@@ -19,13 +19,14 @@
 #define LEN(node_name)				(node_name)->data.len
 
 #define DATA_ID(node_name)			(node_name).value.id
-#define DATA_NUM(node_name)			(node_name).value.num
+#define DATA_NUM(node_name)			(node_name).value.str
 
 #define TOKEN					token_arr.data[IT]
 #define IT					token_arr.it
 #define SIZE					token_arr.size
 
-#define SYMB_MATCH(type, symb)			(TYPE(TOKEN) == type && LEN(TOKEN) == 1 && ID(TOKEN)[0] == symb)
+#define SYMB_MATCH(type, symb)			(TYPE(TOKEN) == type && STR(TOKEN) == symb)
+#define ID_MATCH(cmp_symb)			(LEN(TOKEN) == 1 && ID(TOKEN)[0] == cmp_symb)
 
 #define SyntaxError()				_SyntaxError(__func__, __LINE__)
 #define Require(ch)				_Require(ch, __func__, __LINE__);
@@ -65,6 +66,7 @@ public:
 	
 	int init(const char *file_in);
 	TNODE *GetG();
+	TNODE *GetStmts();
 	TNODE *GetStmt();
 	TNODE *GetE();
 	TNODE *GetT();

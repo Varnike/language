@@ -238,8 +238,8 @@ void TreeDotDump(TNODE *node)
 		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"lightskyblue\" >%lg", node->data.value.num);
 		break;
 	case OPER:
-		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"olivedrab3\" > %.*s", 
-				node->data.len, node->data.value.id);
+		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"olivedrab3\" > %c", 
+				node->data.value.str);
 		break;
 
 	case VAR:
@@ -259,7 +259,7 @@ void TreeDotDump(TNODE *node)
 		break;
 	case RELOP:
 		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"orchid\" > %s", 
-				getRelopName(node->data.value.num));
+				getRelopName(node->data.value.str));
 		break;
 
 	default:
