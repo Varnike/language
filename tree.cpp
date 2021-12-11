@@ -252,16 +252,18 @@ void TreeDotDump(TNODE *node)
 		break;
 
 	case VAR:
-		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"orchid\" >%c", node->data.value.str);
+		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"orchid\" >%c",
+				node->data.value.str);
 		break;
 	case UOPER:
-		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"saddlebrown\" >%s", 
-				get_unoper_name(node->data.value.str));
+		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"saddlebrown\" >%s"
+				, get_unoper_name(node->data.value.str));
 		break;
 	case IF:
 	case ELSE:
 	case WHILE:
 	case ID:
+	case BREAK:
 
 		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"orchid\" > %.*s", 
 				node->data.len, node->data.value.id);
@@ -270,8 +272,14 @@ void TreeDotDump(TNODE *node)
 		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"orchid\" > %s", 
 				getRelopName(node->data.value.str));
 		break;
-
+	case CALL:
+	case DEFINE:
+		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"tomato3\" > %s",
+				getTermName(node->data.data_type));
+		break;
 	default:
+		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"pink\" > %s",
+				getTermName(node->data.data_type));
 		break;
 	}
 
@@ -333,40 +341,4 @@ DATA data_un_c(char str)
 	return tmp;
 }
 
-const char *get_unoper_name(int type) 
-{
-	const char *uop_names[] = {
-		"cos",
-		"sin",
-		"ln"
-	};
 
-	switch (type) {
-	case UOP_COS:
-		return uop_names[0];
-	case UOP_SIN:
-		return uop_names[1];
-	case UOP_LOG:
-		return uop_names[2];
-	default:
-		ERRNUM = DIFF_UNKNOWN_OPER;
-		return NULL;
-	}
-}
-
-const char *getRelopName(int type)
-{
-	if (type >= 6 || type < 0)
-		return NULL;
-
-	const char *relops_names[] = {
-		"<",
-		"<=",
-		"==",
-		"!=",
-		">",
-		">="
-	};
-	
-	return relops_names[type];
-}

@@ -123,8 +123,9 @@ enum diff_errs {
 };
 
 enum lang_errs {
-	LANG_NULLPTR_ERR     = 501,
-	LANG_BUFFER_OVERFLOW = 502
+	LANG_NULLPTR_ERR     = 500,
+	LANG_BUFFER_OVERFLOW = 501,
+	LANG_UNKNOWN_TYPE    = 502
 };
 /*
  * Returns a pointer to the textual description of the code errtype.

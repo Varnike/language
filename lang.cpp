@@ -1,6 +1,7 @@
 #include "lang.h"
 
 static void print_token(TNODE *node);
+static void connect(TNODE *parent, TNODE *lchild, TNODE *rchild);
 
 int LangProcces(char *namein)
 {// TODO ERRORS CHECK + for i remove + str -- btext
@@ -218,18 +219,32 @@ int isRelop(char symb)
 {
 	return symb == '=' || symb == '>' || symb == '<' || symb == '!';
 }
-
-int isTerm(node_data ndata)
+#define TERM_CMP(name, type)					\
+	if (strncmp(DATA_ID(ndata), name, strlen(name)) == 0)	\
+		return type;					\
+	else
+		
+int isTerm(node_data ndata) //TODO !!!!
 {
-	if (strncmp(DATA_ID(ndata), "if", ndata.len) == 0) 
+	/*if (strncmp(DATA_ID(ndata), "if", 2) == 0) 
 		return IF;
-	else if (strncmp(DATA_ID(ndata), "else", ndata.len) == 0) 
+	else if (strncmp(DATA_ID(ndata), "else", 4) == 0) 
 		return ELSE;
-	else if (strncmp(DATA_ID(ndata), "while", ndata.len) == 0)
+	else if (strncmp(DATA_ID(ndata), "while", 5) == 0)
 		return WHILE;
-	
+	else if (strncmp(DATA_ID(ndata), "return", 6) == 0)
+		return RETURN;
+	else if (strncmp(DATA_ID(ndata), "break", 5) == 0)
+		return BREAK;
+	*/
+	TERM_CMP("if", IF);
+	TERM_CMP("else", ELSE);
+	TERM_CMP("while", WHILE);
+	TERM_CMP("return", RETURN);
+	TERM_CMP("break", BREAK);
 	return 0;
 }
+#undef TERM_CMP
 
 static void print_token(TNODE *node) 
 {
@@ -248,6 +263,7 @@ static void print_token(TNODE *node)
 	case IF:
 	case ELSE:
 	case WHILE:
+	case BREAK:
 	case ID:
 		printf(" data : [  %.*s  ], ", LEN(node), ID(node));
 		break;
@@ -273,14 +289,13 @@ TNODE *_GetG(parsed_arr *token_arr)
 }
 
 TNODE *_GetStmts(parsed_arr *token_arr)
-{
+{$
 	TNODE *node = 0;
 	if (ID_MATCH('$') || ID_MATCH('}')) {
 		return node;
 	} else {
 		TreeCtor(&node);
-		TYPE(node) = CONST;
-		NUM(node)  = 1488;
+		TYPE(node)  = STMT;
 		node->right = GetStmt();
 		node->left  = GetStmts();
 		return node;
@@ -288,13 +303,15 @@ TNODE *_GetStmts(parsed_arr *token_arr)
 }
 
 TNODE *_GetStmt(parsed_arr *token_arr)
-{
+{$
 	switch (TYPE(TOKEN)) {
 	case ID:
 		{	//TODO make pretty
 			IT++;
-			if (ID_MATCH('('))
+			if (ID_MATCH('(')) {
+				IT--;
 				return GetF();
+			}
 			IT--;
 
 			TNODE *id = GetId();
@@ -306,34 +323,50 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 			IT++;
 			TNODE *expr = GetE();
 
-			assign->left  = id;
-			assign->right = expr;
-			id->parent    = assign;
-			expr->parent  = assign;
+			connect(assign, id, expr);
 			
 			Require(';');
 
 			return assign;
 		}
-		break;
 	case IF:
-		{
-			$
+		{$
 			TNODE *cond = TOKEN;
 			IT++;
 
 			Require('(');	
 			TNODE *expr = GetRel();
-			Require(')');
-					
+			Require(')');			
 			TNODE *stmt = GetStmt();
-			
-			cond->left  = expr;
-			cond->right = stmt;
-	
+				
+			TNODE *decs = NULL;
+			TreeCtor(&decs);
+			ERRNUM_CHECK(NULL);
+			TYPE(decs) = DECS;
+
+			connect(cond, decs, expr);
+
+			if (TYPE(TOKEN) == ELSE) {
+				IT++;
+				TNODE *els = GetStmt();
+				connect(decs, els, stmt);
+			} else {
+				connect(decs, NULL, stmt);
+			}
 			return cond;
 		}	
-		break;
+	case RETURN:
+		{
+			TNODE *ret = TOKEN;
+			IT++;
+
+			TNODE *token = GetRel();
+			Require(';');
+			
+			connect(ret, NULL, token);
+
+			return ret;
+		}
 	case TERM:
 		{
 			Require('{');
@@ -342,7 +375,6 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 
 			return stmt;
 		}
-		break;
 	case WHILE:
 		{
 			TNODE *whileloop = TOKEN;
@@ -352,41 +384,101 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 			TNODE *expr = GetRel();
 			Require(')');
 			
-
 			TNODE *stmt = GetStmt();
-
-			whileloop->left  = expr;
-			whileloop->right = stmt;	
+			
+			connect(whileloop, stmt, expr);
 
 			return whileloop;
+		}
+	case BREAK:
+		{
+			TNODE *break_t = TOKEN;
+			IT++;
+			Require(';');
+			
+			return break_t;
 		}
 	default:
 		TNODE *node = GetE();
 		Require(';');
 		
 		return node;
-		break;
 	}
 }
 
 TNODE *_GetF(parsed_arr *token_arr)
-{
-	
-	Require('(');
-	//TNODE *arg = GetArg();
-	Require(')');
-	
+{$
+	ERRNUM_CHECK(NULL);
+
+	TNODE *name = TOKEN;
 	IT++;
+
+	Require('(');
+	TNODE *arg = GetArgs();
+	Require(')');
+		
 	if (!ID_MATCH('{'))
 		SyntaxError();
-	IT--;
-
-	TNODE *body = GetStmts();
 	
+	TNODE *body   = GetStmt();
+	TNODE *define = NULL;
+	TNODE *func   = NULL;
+
+	TreeCtor(&define);
+	TreeCtor(&func);
+	ERRNUM_CHECK(NULL);
+
+	TYPE(define) = DEFINE;
+	TYPE(func)   = FUNC;
+	
+	connect(define, func, body);
+	connect(func, name, arg);
+	
+	return define;
+}
+
+TNODE *_GetArgs(parsed_arr *token_arr)
+{$
+	if (ID_MATCH(')'))
+		return NULL;
+
+	TNODE *arg   = GetId();
+	TNODE *param = NULL;
+
+	TreeCtor(&param);
+	ERRNUM_CHECK(NULL);
+	TYPE(param) = PARAM;
+
+	connect(param, GetArgs(), arg);
+	
+	return param;
+}
+
+TNODE *_GetCF(parsed_arr *token_arr)
+{
+	TNODE *name = TOKEN;
+	IT++;
+
+	Require('(');
+	TNODE *args = GetArgs();
+	Require(')');
+
+	TNODE *call = NULL;
+	TNODE *func = NULL;
+	TreeCtor(&func);
+	TreeCtor(&call);
+	TYPE(call) = CALL;
+	TYPE(func) = FUNC;
+	ERRNUM_CHECK(NULL);
+
+	connect(call, NULL, func);
+	connect(func, name, args);
+
+	return call;
 }
 
 TNODE *_GetRel(parsed_arr *token_arr)
-{
+{$
 	TNODE *token = GetE();
 	
 	if (TYPE(TOKEN) == RELOP) {
@@ -397,11 +489,14 @@ TNODE *_GetRel(parsed_arr *token_arr)
 		CHECK_SET_ERR(!relop, LANG_NULLPTR_ERR, NULL);
 		CHECK_SET_ERR(!token, LANG_NULLPTR_ERR, NULL);
 
+		connect(relop, token, token2);
+		/*
 		relop->right = token2;
 		relop->left  = token;
 
 		token->parent  = relop;
 		token2->parent = relop;
+		*/
 
 		token = relop;
 	}
@@ -460,13 +555,18 @@ TNODE *_GetP(parsed_arr *token_arr)
 		IT++;
 
 		TNODE *token = GetRel();
-
 		Require(')');	
 
 		return token;
 	} else if (TYPE(TOKEN) == CONST){
 		return GetN();
 	} else if (TYPE(TOKEN) == ID) {
+		IT++;
+		if (ID_MATCH('(')) {
+			IT--;
+			return GetCF();
+		}
+		IT--;
 		return GetId();
 	}
 }
@@ -484,6 +584,7 @@ TNODE *_GetN(parsed_arr *token_arr)
 
 TNODE *_GetId(parsed_arr *token_arr)
 {$
+	print_token(TOKEN);
 	if (TYPE(TOKEN) == ID) {
 		TNODE *tmp = TOKEN;
 		IT++;
@@ -491,6 +592,18 @@ TNODE *_GetId(parsed_arr *token_arr)
 	} else {
 		SyntaxError();
 	}
+}
+
+static void connect(TNODE *parent, TNODE *lchild, TNODE *rchild)
+{
+	CHECK_SET_ERR(!parent, TREE_NULL_NODE, );
+
+	parent->left   = lchild;
+	parent->right  = rchild;
+	if (lchild)
+		lchild->parent = parent;
+	if (rchild)
+		rchild->parent = parent;	
 }
 
 int _Require(char cmp_symb, parsed_arr *token_arr, const char *func, const int line)

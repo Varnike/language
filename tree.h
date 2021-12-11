@@ -3,6 +3,7 @@
 
 #include "include/error.h"
 #include "config.h"
+#include "token_names.h"
 
 #include <cstring>
 #include <stdio.h>
@@ -23,7 +24,7 @@
 {										\
 	if (what) {								\
 		ERRNUM = code;							\
-		return (retval);						\
+		return retval;							\
 	}									\
 }
 
@@ -33,7 +34,7 @@
 	{									\
 		if(ERRNUM) {							\
 			perror(errmsg(ERRNUM));					\
-			return ret_val;						\
+			TREE_EXIT_ERR(ret_val);					\
 		}								\
 	}
 
@@ -64,13 +65,6 @@ enum DATA_TYPES {
 	UNKNOWN_TYPE = 4
 };
 */
-
-enum unary_operators {
-        UOP_SIN = 'S',
-        UOP_COS = 'C',
-	UOP_LOG = 'L'
-};                    
-
 union DATA {
 	double num;
 	char str; // TODO char * ???
@@ -101,7 +95,6 @@ enum SUBTREE_SIDE {
 };
 
 int TreeInsert(TNODE *parent, int side, tval_t data);
-
 int TreeCtor(TNODE **root, tval_t val = {}, TNODE *parent = NULL);
 int TreeDtor(TNODE *node);
 int TreePrintNode(TNODE *node);
@@ -119,7 +112,5 @@ void set_node(TNODE *node, tval_t val, TNODE *parent = NULL, TNODE *left = NULL,
 void TreeDotDump(TNODE *node);
 void VisitPrint(TNODE *node, FILE *fout = stdout);
 int TreeCheck(TNODE *node);
-const char *get_unoper_name(int type); 
 
-const char *getRelopName(int type);
 #endif // TREE_H

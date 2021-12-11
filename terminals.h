@@ -13,7 +13,15 @@ enum DATA_TYPES {
 	ELSE         = 8,
 	WHILE        = 9,
 	RELOP        = 10,
-	TREE_TOKEN   = 11
+	TREE_TOKEN   = 11,
+	STMT         = 12,
+	CALL         = 13,
+	DEFINE       = 14,
+	PARAM        = 15,
+	RETURN       = 16,
+	FUNC         = 17,
+	DECS         = 18,
+	BREAK        = 19
 	/*
 	LT           = 10,
 	LE           = 11,
@@ -42,11 +50,19 @@ enum relops {
 	RELOP_GE = 5
 };
 
+enum unary_operators {
+        UOP_SIN = 'S',
+        UOP_COS = 'C',
+	UOP_LOG = 'L'
+};                    
+
+
+/*
 enum tree_tokens {
 	STATEMENT = 0,
 	CALL      = 1
 }; 
-/*
+
 struct _sample {
 	const int type;
 	const char name[];

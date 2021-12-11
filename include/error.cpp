@@ -81,7 +81,8 @@ const char *errmsg(int errt)
 
 	const char *lang_messages[] = {
 		"Language nullptr pointer error!",
-		"Language buffer overflow error!"
+		"Language buffer overflow error!",
+		"Language unknown token type error!"
 	};
 
 	switch (errt/100) {
