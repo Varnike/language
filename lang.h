@@ -9,30 +9,44 @@
 #include "config.h"
 #include "include/onegin.h"
 
-#define  $ 			printf("< %s >\t%d\n", __func__,__LINE__);
+#define  $ 				printf("< %s >\t%d\n", __func__,__LINE__);
 //#define  $ 			printf("\t\t\t---ON LINE %d IN FUNCTION %s---\n", __LINE__, __func__);
 
-#define NUM(node_name) 				(node_name)->data.value.num
-#define STR(node_name) 				(node_name)->data.value.str
-#define TYPE(node_name)				(node_name)->data.data_type
-#define ID(node_name)				(node_name)->data.value.id
-#define LEN(node_name)				(node_name)->data.len
+#define NUM(node_name) 			(node_name)->data.value.num
+#define STR(node_name) 			(node_name)->data.value.str
+#define TYPE(node_name)			(node_name)->data.data_type
+#define ID(node_name)			(node_name)->data.value.id
+#define LEN(node_name)			(node_name)->data.len
 
-#define DATA_ID(node_name)			(node_name).value.id
-#define DATA_NUM(node_name)			(node_name).value.str
+#define DATA_ID(node_name)		(node_name).value.id
+#define DATA_NUM(node_name)		(node_name).value.str
 
-#define TOKEN					token_arr.data[IT]
-#define IT					token_arr.it
-#define SIZE					token_arr.size
+#define TOKEN				(token_arr->data[IT])
+#define IT				(token_arr->it >= token_arr->size) ? \
+						SyntaxError() : (token_arr->it)
+//#define NEXT				(IT + 1)
+#define SIZE				token_arr.size
 
-#define SYMB_MATCH(type, symb)			(TYPE(TOKEN) == type && STR(TOKEN) == symb)
-#define ID_MATCH(cmp_symb)			(LEN(TOKEN) == 1 && ID(TOKEN)[0] == cmp_symb)
+#define SYMB_MATCH(type, symb)		(TYPE(TOKEN) == type && STR(TOKEN) == symb)
 
-#define SyntaxError()				_SyntaxError(__func__, __LINE__)
-#define Require(ch)				_Require(ch, __func__, __LINE__);
+#define SYMB_MATCH(type, symb)		(TYPE(TOKEN) == type && STR(TOKEN) == symb)
+#define ID_MATCH(cmp_symb)		(LEN(TOKEN) == 1 && ID(TOKEN)[0] == cmp_symb)
+
+#define SyntaxError()			_SyntaxError(__func__, __LINE__)
+#define Require(ch)			_Require(ch, token_arr, __func__, __LINE__);
+
+#define GetG()				_GetG(token_arr)
+#define GetStmts()			_GetStmts(token_arr)
+#define GetStmt()			_GetStmt(token_arr)
+#define GetF()				_GetF(token_arr)
+#define GetE()				_GetE(token_arr)
+#define GetT()				_GetT(token_arr)
+#define GetP()				_GetP(token_arr)
+#define GetN()				_GetN(token_arr)
+#define GetId()				_GetId(token_arr)
+#define GetRel()			_GetRel(token_arr)
 
 const int MAX_TOKEN_CNT = 100;
-
 const int MAX_ID_LEN    = 100;
 
 /*
@@ -59,39 +73,39 @@ struct parsed_arr {
 	int size = 0;
 };
 
-class lang{
-public:
-	lang(char *namein);
-	~lang();
-	
-	int init(const char *file_in);
-	TNODE *GetG();
-	TNODE *GetStmts();
-	TNODE *GetStmt();
-	TNODE *GetE();
-	TNODE *GetT();
-	TNODE *GetP();
-	TNODE *GetN();
-	TNODE *GetId();
-	TNODE *GetRel();
+int LangProcces(char *namein);	
+int init(const char *file_in, textBuff *btext);
 
-	int lexer_process();
-private:
-	int _Require(char cmp_symb, const char *func, const int line);
-	int _SyntaxError(const char *func, const int line);
-	
-	node_data tokenize_op();
-	node_data tokenize_no();
-	node_data tokenize_id();
-	node_data tokenize_relop();
+TNODE *_GetG(parsed_arr *tokens);
+TNODE *_GetStmts(parsed_arr *tokens);
+TNODE *_GetStmt(parsed_arr *tokens);
+TNODE *_GetF(parsed_arr *tokens);
+TNODE *_GetE(parsed_arr *tokens);
+TNODE *_GetT(parsed_arr *tokens);
+TNODE *_GetP(parsed_arr *tokens);
+TNODE *_GetN(parsed_arr *tokens);
+TNODE *_GetId(parsed_arr *tokens);
+TNODE *_GetRel(parsed_arr *tokens);
 
-	int isTerminalChar(char symb);
-	int isOP(char symb);
-	int isTerm(node_data ndata);
-	int isRelop(char symb);
+int lexer_process(textBuff *btext, parsed_arr *token_arr);
+int _Require(char cmp_symb, parsed_arr *tokens, 
+		const char *func, const int line);
+int _SyntaxError(const char *func, const int line);
 
+node_data tokenize_op(textBuff *btext);
+node_data tokenize_no(textBuff *btext);
+node_data tokenize_id(textBuff *btext);
+node_data tokenize_relop(textBuff *btext);
+
+int isTerminalChar(char symb);
+int isOP(char symb);
+int isTerm(node_data ndata);
+int isRelop(char symb);
+
+#if 0
 	textBuff btext = {};
 	char *str   = nullptr;
 	parsed_arr token_arr = {};
-};
+#endif
+
 #endif // LANG_H

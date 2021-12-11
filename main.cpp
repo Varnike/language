@@ -3,6 +3,7 @@
 
 int main()
 {
-	lang LANG = lang("check.txt");
+	LangProcces("check.txt");
+	//lang LANG = lang("check.txt");
 	//printf("Answer is %f\n", LANG.GetG());
 }

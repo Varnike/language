@@ -79,6 +79,15 @@ int TreeDtor(TNODE *node)
 	return 0;
 }
 
+int TreeDeleteNode(TNODE **node)
+{
+	CHECK_(node  == NULL, TREE_NULL_NODE);
+	CHECK_(*node == NULL, TREE_NULL_NODE);
+	
+	free(*node);
+	*node = NULL;
+}
+
 void TreeDump(TNODE *root)
 {
 	TREE_CHECK(root, ERRNUM);//TODO

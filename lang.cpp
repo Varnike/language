@@ -2,108 +2,112 @@
 
 static void print_token(TNODE *node);
 
-lang::lang(char *namein)
-{// TODO
-	init("check.txt");
+int LangProcces(char *namein)
+{// TODO ERRORS CHECK + for i remove + str -- btext
+	textBuff btext = {};
+	parsed_arr token_arr = {};
+	
+	init("check.txt", &btext);
+	char *src_str = btext.buff;
 
-	str = btext.buff;
-	lexer_process();
+	lexer_process(&btext, &token_arr);
 
 	for (int i = 0; i != token_arr.size; i++) {
 		print_token(token_arr.data[i]);
 	}
 
-	TNODE *root = GetG();
+	TNODE *root = _GetG(&token_arr);
 
 	for (int i = 0; i != token_arr.size; i++) {
 		print_token(token_arr.data[i]);
 	}
 
 	TreeDump(root);
+
+	TreeDtor(root);
+	
+	free(token_arr.data);
+	free(src_str);
 }
 
-lang::~lang()
-{// TODO 
-	free(btext.buff);
-}
-
-int lang::init(const char *file_in)
+int init(const char *file_in, textBuff *btext)
 {
 	CHECK_(!file_in, LANG_NULLPTR_ERR);
 
-	btext.file_in = fopen(file_in, "r");
-	CHECK_(btext.file_in == NULL, FOPEN_ERR);
-	read_from_file(&btext, file_in);
+	btext->file_in = fopen(file_in, "r");
+	CHECK_(btext->file_in == NULL, FOPEN_ERR);
+	read_from_file(btext, file_in);
 	
+	printf("%s\n", btext->buff);
 	
-	printf("%s\n", btext.buff);
-	
-	fclose(btext.file_in);
+	fclose(btext->file_in);
 }
 
-int lang::lexer_process()
+int lexer_process(textBuff *btext, parsed_arr *token_arr)
 {
-	CHECK_(str == nullptr, LANG_NULLPTR_ERR);
-	
+	CHECK_(btext == nullptr, LANG_NULLPTR_ERR);
+	CHECK_(btext->buff == NULL, LANG_NULLPTR_ERR);
+	CHECK_(token_arr == NULL, LANG_NULLPTR_ERR);
+
 	node_data node_val = {};
 	
-	token_arr.data = (TNODE **)calloc(MAX_TOKEN_CNT, sizeof(TNODE *));
+	token_arr->data = (TNODE **)calloc(MAX_TOKEN_CNT, sizeof(TNODE *));
 	int comment_flag = 0;
 
-	while (*str != '\0') {
-$		if (isspace(*str)) {
-			if (*str == '\n')
+	while (*(btext->buff) != '\0') {
+$		if (isspace(*(btext->buff))) {
+			if (*(btext->buff) == '\n')
 				comment_flag = 0;
-			str++;
+			(btext->buff)++;
 			continue;
 		} else if (comment_flag) {
-			*str++;
+			*(btext->buff)++;
 			continue;
-		} else if (*str == '#') {
-			str++;
+		} else if (*(btext->buff) == '#') {
+			(btext->buff)++;
 			comment_flag = 1; 
 			continue;
-		} else if (isdigit(*str)) {
-			node_val = tokenize_no();
-		} else if (isalpha(*str)) {
-			node_val = tokenize_id();
-		} else if (isOP(*str)) {
-			node_val = tokenize_op();
-		} else if (isTerminalChar(*str)){
-			DATA_ID(node_val)  = str++;
+		} else if (isdigit(*(btext->buff))) {
+			node_val = tokenize_no(btext);
+		} else if (isalpha(*(btext->buff))) {
+			node_val = tokenize_id(btext);
+		} else if (isOP(*(btext->buff))) {
+			node_val = tokenize_op(btext);
+		} else if (isTerminalChar(*(btext->buff))){
+			DATA_ID(node_val)  = (btext->buff)++;
 			node_val.len       = 1;
 			node_val.data_type = TERM;
-		} else if (isRelop(*str)) {
-			node_val = tokenize_relop();			
+		} else if (isRelop(*(btext->buff))) {
+			node_val = tokenize_relop(btext);			
 		} else {
 			SyntaxError();
 		}
 
 		ERRNUM_CHECK(ERRNUM);
 		
-		if (token_arr.size >= MAX_TOKEN_CNT) {
+		if (token_arr->size >= MAX_TOKEN_CNT) {
 			ERRNUM = LANG_BUFFER_OVERFLOW;
 			goto err_free_buffer;
 		}
 
-		TreeCtor((token_arr.data + token_arr.size++), node_val);
+		TreeCtor((token_arr->data + token_arr->size++), node_val);
 	}
 
 err_free_buffer:
 	if (ERRNUM)
-		free(token_arr.data);
+		free(token_arr->data);
 	
 	return ERRNUM;
 }
 
-node_data lang::tokenize_no()
+node_data tokenize_no(textBuff *btext)
 {
 	$
 	node_data tmp_data = {};
 
-	double val = strtod(str, &str);	
+	double val = strtod((btext->buff), &(btext->buff));	
 
-	printf("number: %f\n str: %s\n", val, str);	
+	printf("number: %f\n str: %s\n", val, (btext->buff));
 
 	tmp_data.value.num = val;
 	tmp_data.data_type = CONST;
@@ -111,18 +115,18 @@ node_data lang::tokenize_no()
 	return tmp_data;
 }
 
-node_data lang::tokenize_id()
+node_data tokenize_id(textBuff *btext)
 {	
 $	node_data tmp_data = {};
 	
-	CHECK_SET_ERR(!str, LANG_NULLPTR_ERR, tmp_data);
+	CHECK_SET_ERR(!(btext->buff), LANG_NULLPTR_ERR, tmp_data);
 
-	DATA_ID(tmp_data) = str;
+	DATA_ID(tmp_data) = (btext->buff);
 
 	int it = 0;
 
-	while (isdigit(*str) || isalpha(*str)) {
-		str++;
+	while (isdigit(*(btext->buff)) || isalpha(*(btext->buff))) {
+		(btext->buff)++;
 		it++;	
 	}
 	
@@ -137,25 +141,25 @@ $	node_data tmp_data = {};
 	return tmp_data;
 }
 //TODO WTF WTF WTF
-node_data lang::tokenize_op()
+node_data tokenize_op(textBuff *btext)
 {
 $	node_data tmp_data = {};
 
 	tmp_data.data_type = OPER;
-	DATA_NUM(tmp_data) = *str++;
+	DATA_NUM(tmp_data) = *(btext->buff)++;
 	
 	return tmp_data;
 }
 //TODO macros
-node_data lang::tokenize_relop()
+node_data tokenize_relop(textBuff *btext)
 {	
 	node_data tmp_data = {};
 	tmp_data.data_type = RELOP;
 
-	switch (*str++) {
+	switch (*(btext->buff)++) {
 	case '=':
-		if (*str == '=') {
-			str++;
+		if (*(btext->buff) == '=') {
+			(btext->buff)++;
 			DATA_NUM(tmp_data) = RELOP_EQ;
 			return tmp_data;
 		} else {
@@ -165,8 +169,8 @@ node_data lang::tokenize_relop()
 		}
 		break;
 	case '!':
-		if (*str == '=') {
-			str++;
+		if (*(btext->buff) == '=') {
+			(btext->buff)++;
 			DATA_NUM(tmp_data) = RELOP_NE;
 			return tmp_data;
 		} else {
@@ -174,8 +178,8 @@ node_data lang::tokenize_relop()
 		}
 		break;
 	case '<':
-		if (*str == '=') {
-			str++;
+		if (*(btext->buff) == '=') {
+			(btext->buff)++;
 			DATA_NUM(tmp_data) = RELOP_LE;
 			return tmp_data;
 		} else {
@@ -184,8 +188,8 @@ node_data lang::tokenize_relop()
 		}
 		break;
 	case '>':
-		if (*str == '=') {
-			str++;
+		if (*(btext->buff) == '=') {
+			(btext->buff)++;
 			DATA_NUM(tmp_data) = RELOP_GE;
 			return tmp_data;
 		} else {
@@ -198,27 +202,28 @@ node_data lang::tokenize_relop()
 		break;
 	}
 }
-int lang::isOP(char symb)
+int isOP(char symb)
 {
 $	return (symb == OP_ADD || symb == OP_MUL || symb == OP_DIV || 
 			symb == OP_SUB || symb == OP_PWR);
 }
 
-int lang::isTerminalChar(char symb)
+int isTerminalChar(char symb)
 {
-	return (symb == '(' || symb == ')' || symb == '{' || symb == '}' || symb == ';' || symb == '$');
+	return (symb == '(' || symb == ')' || symb == '{' || symb == '}' 
+			|| symb == ';' || symb == '$');
 }
 
-int lang::isRelop(char symb)
+int isRelop(char symb)
 {
 	return symb == '=' || symb == '>' || symb == '<' || symb == '!';
 }
 
-int lang::isTerm(node_data ndata)
+int isTerm(node_data ndata)
 {
-	if (strncmp(DATA_ID(ndata), "if", ndata.len) == 0)
+	if (strncmp(DATA_ID(ndata), "if", ndata.len) == 0) 
 		return IF;
-	else if (strncmp(DATA_ID(ndata), "else", ndata.len) == 0)
+	else if (strncmp(DATA_ID(ndata), "else", ndata.len) == 0) 
 		return ELSE;
 	else if (strncmp(DATA_ID(ndata), "while", ndata.len) == 0)
 		return WHILE;
@@ -244,7 +249,7 @@ static void print_token(TNODE *node)
 	case ELSE:
 	case WHILE:
 	case ID:
-		printf("data : [  %.*s  ], ", LEN(node), ID(node));
+		printf(" data : [  %.*s  ], ", LEN(node), ID(node));
 		break;
 	case RELOP:
 		printf("data : [  %s  ]  ", getRelopName(STR(node)));
@@ -257,26 +262,17 @@ static void print_token(TNODE *node)
 			node->left, node->right, node->parent);                             
 }
 
-TNODE *lang::GetG()
+TNODE *_GetG(parsed_arr *token_arr)
 {$
 	TNODE *token = NULL;
-	TreeCtor(&token);
-	/*
-	while(1) {
-		if (ID_MATCH('$'))
-			return token;
-		GetStmt();
-		Require(';');
-		IT++;
-	}
-	*/
+
 	token = GetStmts();
 
 	Require('$');
 	return token;
 }
 
-TNODE *lang::GetStmts()
+TNODE *_GetStmts(parsed_arr *token_arr)
 {
 	TNODE *node = 0;
 	if (ID_MATCH('$') || ID_MATCH('}')) {
@@ -291,11 +287,16 @@ TNODE *lang::GetStmts()
 	}
 }
 
-TNODE *lang::GetStmt()
+TNODE *_GetStmt(parsed_arr *token_arr)
 {
 	switch (TYPE(TOKEN)) {
 	case ID:
-		{
+		{	//TODO make pretty
+			IT++;
+			if (ID_MATCH('('))
+				return GetF();
+			IT--;
+
 			TNODE *id = GetId();
 			
 			if (!SYMB_MATCH(OPER, OP_ASG))
@@ -320,15 +321,13 @@ TNODE *lang::GetStmt()
 			$
 			TNODE *cond = TOKEN;
 			IT++;
-			Require('(');
-			
+
+			Require('(');	
 			TNODE *expr = GetRel();
-$
 			Require(')');
-			
-			
+					
 			TNODE *stmt = GetStmt();
-$			
+			
 			cond->left  = expr;
 			cond->right = stmt;
 	
@@ -338,10 +337,8 @@ $
 	case TERM:
 		{
 			Require('{');
-	
 			TNODE *stmt = GetStmts();
 			Require('}');
-
 
 			return stmt;
 		}
@@ -350,8 +347,8 @@ $
 		{
 			TNODE *whileloop = TOKEN;
 			IT++;
-			Require('(');
-		
+
+			Require('(');	
 			TNODE *expr = GetRel();
 			Require(')');
 			
@@ -372,7 +369,23 @@ $
 	}
 }
 
-TNODE *lang::GetRel()
+TNODE *_GetF(parsed_arr *token_arr)
+{
+	
+	Require('(');
+	//TNODE *arg = GetArg();
+	Require(')');
+	
+	IT++;
+	if (!ID_MATCH('{'))
+		SyntaxError();
+	IT--;
+
+	TNODE *body = GetStmts();
+	
+}
+
+TNODE *_GetRel(parsed_arr *token_arr)
 {
 	TNODE *token = GetE();
 	
@@ -396,7 +409,7 @@ TNODE *lang::GetRel()
 	return token;
 }
 
-TNODE *lang::GetE()
+TNODE *_GetE(parsed_arr *token_arr)
 {$
 	TNODE *token = GetT();
 	
@@ -416,7 +429,7 @@ TNODE *lang::GetE()
 	return token;
 }
 
-TNODE *lang::GetT()
+TNODE *_GetT(parsed_arr *token_arr)
 {$
 	TNODE *token = GetP();
 	
@@ -441,12 +454,12 @@ TNODE *lang::GetT()
 	return token;
 }
 
-TNODE *lang::GetP()
+TNODE *_GetP(parsed_arr *token_arr)
 {$
 	if (TYPE(TOKEN) == TERM && ID(TOKEN)[0] == '(') {
 		IT++;
 
-		TNODE *token = lang::GetRel();
+		TNODE *token = GetRel();
 
 		Require(')');	
 
@@ -458,7 +471,7 @@ TNODE *lang::GetP()
 	}
 }
 
-TNODE *lang::GetN()
+TNODE *_GetN(parsed_arr *token_arr)
 {$
 	if (TYPE(TOKEN) == CONST) {
 		TNODE *tmp = TOKEN;
@@ -469,7 +482,7 @@ TNODE *lang::GetN()
 	}
 }
 
-TNODE *lang::GetId()
+TNODE *_GetId(parsed_arr *token_arr)
 {$
 	if (TYPE(TOKEN) == ID) {
 		TNODE *tmp = TOKEN;
@@ -480,9 +493,10 @@ TNODE *lang::GetId()
 	}
 }
 
-int lang::_Require(char cmp_symb, const char *func, const int line)
+int _Require(char cmp_symb, parsed_arr *token_arr, const char *func, const int line)
 {
 	if (LEN(TOKEN) == 1 && ID(TOKEN)[0] == cmp_symb) {
+		TreeDeleteNode(&TOKEN);
 		IT++;
 		return 1;
 	} else  {
@@ -492,7 +506,7 @@ int lang::_Require(char cmp_symb, const char *func, const int line)
 	}
 }
 
-int lang::_SyntaxError(const char *func, const int line)
+int _SyntaxError(const char *func, const int line)
 {
 	fprintf(stderr, "!!!!!\n\nSyntax Error on line %d of func %s\n\n!!!!!\n", line, func);
 	assert(!"Syntax ERROR!");

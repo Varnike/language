@@ -13,7 +13,7 @@
 #include <inttypes.h>
 #include "terminals.h"
 
-#define  $ 			printf("\t\t\t---ON LINE %d IN FUNCTION %s---\n", __LINE__, __func__);
+//#define  $ 			printf("\t\t\t---ON LINE %d IN FUNCTION %s---\n", __LINE__, __func__);
 //#define $ ;
 #define SET_ERR(errtype)        return ERRNUM = errtype;
 
@@ -106,6 +106,8 @@ int TreeCtor(TNODE **root, tval_t val = {}, TNODE *parent = NULL);
 int TreeDtor(TNODE *node);
 int TreePrintNode(TNODE *node);
 int TreeCopy(TNODE *src, TNODE **dst, TNODE *parent);
+int TreeDeleteNode(TNODE **node);
+
 void TreeDump(TNODE *node);
 
 node_data set_node_data(int data_type = 0, DATA val = {});
