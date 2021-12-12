@@ -51,6 +51,8 @@ int init(const char *file_in, textBuff *btext)
 	printf("%s\n", btext->buff);
 	
 	fclose(btext->file_in);
+
+	return 0;
 }
 
 int lexer_process(textBuff *btext, parsed_arr *token_arr)
@@ -225,17 +227,25 @@ int isRelop(char symb)
 }
 
 #define TERM_CMP(name, type)					\
-	if (strncmp(DATA_ID(ndata), name, strlen(name)) == 0)	\
+	if (strncmp(DATA_ID(ndata), name, strlen(name)) == 0) {	\
 		return type;					\
-	else
+	} else
 		
-int isTerm(node_data ndata) //TODO !!!!
+int isTerm(node_data ndata) 
 {
-	TERM_CMP("if", IF);
-	TERM_CMP("else", ELSE);
-	TERM_CMP("while", WHILE);
-	TERM_CMP("return", RETURN);
-	TERM_CMP("break", BREAK);
+	TERM_CMP("suppose", IF)
+	TERM_CMP("however", ELSE)
+	TERM_CMP("proven", RETURN)
+	TERM_CMP("break", BREAK)
+	TERM_CMP("Theorem", THEOREM)
+	TERM_CMP("Given", GIVEN)
+	TERM_CMP("Proof", PROOF)
+	TERM_CMP("QED", QED)
+	TERM_CMP("Consider", WHILE)
+	TERM_CMP("assuming", ASSUME)
+	TERM_CMP("perfomed", PERF)
+	TERM_CMP("expression", EXPR)
+	TERM_CMP("therefore", THEREF)
 	return 0;
 }
 
@@ -267,6 +277,7 @@ static void print_token(TNODE *node)
 		printf("data : [  %s  ]  ", getRelopName(STR(node)));
 		break;
 	default:
+		printf("data : [  %.*s  ], ", LEN(node), ID(node));
 		break;
 	}
 
@@ -286,7 +297,7 @@ TNODE *_GetG(parsed_arr *token_arr)
 
 TNODE *_GetStmts(parsed_arr *token_arr)
 {$
-	if (ID_MATCH('$') || ID_MATCH('}')) {
+	if (ID_MATCH('$') || ID_MATCH('}') || TYPE_MATCH(QED)) {
 		return NULL;
 	} else {
 		CREATE_TYPE_TOKEN(node, STMT);
@@ -303,15 +314,12 @@ TNODE *_GetStmts(parsed_arr *token_arr)
 TNODE *_GetStmt(parsed_arr *token_arr)
 {$
 	switch (TYPE(TOKEN)) {
+	case THEOREM:
+		{
+			return GetF();	
+		}
 	case ID:
 		{	//TODO make pretty
-			IT++;
-			if (ID_MATCH('(')) {
-				IT--;
-				return GetF();
-			}
-			IT--;
-
 			TNODE *id = GetId();
 			
 			if (!SYMB_MATCH(OPER, OP_ASG))
@@ -334,7 +342,11 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 
 			Require('(');	
 			TNODE *expr = GetRel();
-			Require(')');			
+			Require(')');
+
+			RequireT(PERF);
+			RequireT(THEREF);
+
 			TNODE *stmt = GetStmt();
 				
 			CREATE_TYPE_TOKEN(decs, DECS);
@@ -342,12 +354,14 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 			connect(cond, decs, expr);
 
 			if (TYPE(TOKEN) == ELSE) {
-				IT++;
+				RequireT(ELSE);
+
 				TNODE *els = GetStmt();
 				connect(decs, els, stmt);
 			} else {
 				connect(decs, NULL, stmt);
 			}
+
 			return cond;
 		}	
 	case RETURN:
@@ -362,6 +376,14 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 
 			return ret;
 		}
+	case PROOF:
+		{
+			RequireT(PROOF);
+			TNODE *stmt = GetStmts();
+			RequireT(QED);
+
+			return stmt;
+		}
 	case TERM:
 		{
 			Require('{');
@@ -374,13 +396,19 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 		{
 			TNODE *whileloop = TOKEN;
 			IT++;
+		
+			TNODE *stmt = GetStmt();
+	
+			RequireT(ASSUME);
+			RequireT(EXPR);
 
 			Require('(');	
 			TNODE *expr = GetRel();
 			Require(')');
-			
-			TNODE *stmt = GetStmt();
-			
+
+			RequireT(PERF);
+			Require(';');
+
 			connect(whileloop, stmt, expr);
 
 			return whileloop;
@@ -404,15 +432,21 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 TNODE *_GetF(parsed_arr *token_arr)
 {$
 	ERRNUM_CHECK(NULL);
+	
+	RequireT(THEOREM);
 
+	Require('(');
 	TNODE *name = TOKEN;
 	IT++;
+	Require(')');
+
+	RequireT(GIVEN);
 
 	Require('(');
 	TNODE *arg = GetArgs();
 	Require(')');
 		
-	if (!ID_MATCH('{'))
+	if (!TYPE_MATCH(PROOF))
 		SyntaxError();
 	
 	TNODE *body   = GetStmt();
@@ -586,6 +620,19 @@ int _Require(char cmp_symb, parsed_arr *token_arr, const char *func, const int l
 	} else  {
 		printf("Require [ %c ] but got [ %c ].\n Error: failed on line %d, function %s\n", 
 				 cmp_symb, ID(TOKEN)[0], line, func);
+		SyntaxError();
+	}
+}
+
+int _RequireT(int type, parsed_arr *token_arr, const char *func, const int line)
+{
+	if (TYPE(TOKEN) == type) {
+		TreeDeleteNode(&TOKEN);
+		IT++;
+		return 1;
+	} else  {
+		printf("Require [ %d ] but got [ %.*s ].\n Error: failed on line %d, function %s\n", 
+				type, LEN(TOKEN), ID(TOKEN), line, func);
 		SyntaxError();
 	}
 }

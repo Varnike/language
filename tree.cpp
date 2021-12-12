@@ -261,7 +261,6 @@ void TreeDotDump(TNODE *node)
 		break;
 	case IF:
 	case ELSE:
-	case WHILE:
 	case ID:
 	case BREAK:
 
@@ -274,6 +273,7 @@ void TreeDotDump(TNODE *node)
 		break;
 	case CALL:
 	case DEFINE:
+	case WHILE:
 		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"tomato3\" > %s",
 				getTermName(node->data.data_type));
 		break;

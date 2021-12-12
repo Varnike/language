@@ -21,7 +21,16 @@ enum DATA_TYPES {
 	RETURN       = 16,
 	FUNC         = 17,
 	DECS         = 18,
-	BREAK        = 19
+	BREAK        = 19,
+	THEOREM      = 20,
+	GIVEN        = 21,
+	PROOF        = 22,
+	QED          = 23,
+	CONS         = 24,
+	ASSUME       = 25,
+	EXPR         = 26,
+	PERF         = 27,
+	THEREF       = 28
 	/*
 	LT           = 10,
 	LE           = 11,

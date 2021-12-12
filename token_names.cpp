@@ -47,7 +47,9 @@ const char *getTermName(int type)
 		"parameter",
 		"return",
 		"function",
-		"decision"
+		"decision",
+		"while",
+		"if"
 	};
 
 	switch (type) {
@@ -65,6 +67,13 @@ const char *getTermName(int type)
 		return term_names[5];
 	case DECS:
 		return term_names[6];
+	case WHILE:
+		return term_names[7];
+	/*case CONS:
+		return term_names[8];
+	case SUPP:
+		return term_names[9];
+	*/
 	default:
 		ERRNUM = LANG_UNKNOWN_TYPE;
 		return NULL;	

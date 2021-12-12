@@ -1,45 +1,22 @@
-# Pseudocode
+# Short function example
 
-Following code will be on English.
+``` sh
+Theorem (Taylor)   # function name
+Given (x, y)       # arguments
+Proof              # start of func
+	x = 3;
+	
+	Consider {
+		x = x + 1;
+	} assuming expression (x > 2) perfomed;
 
-``` cpp
-/*
- * basic operations
- */
-x = 2 + 8 * 7;
-size = x * x;
-
-/*
- * calling function
- */
-size = воспользуемся леммой func(x);
-
-/*
- * if else construction
- */
-предположим size > x тогда { // if true 
-	...
-} получим противоречие { // else 
-	...
-}
-
-/*
- * function
- */
-лемма func дано arg1 докажем {
-	...
-	чтд ret_val;
-}
-
-/*
- * for / while
- */
-
-Для каждого cond {
-	...
-}
-
-Для каждго cond -> expr{ // ???
-	...
-}
+	suppose (y == 3) performed # if construction true/false
+	therefore {                # if true
+		x = y + 1;
+	} however {                # else
+		y = x + 1;
+		proven x;           # return id
+	}
+	proven y * (x == 2);        # return expr
+QED                # end of func	
 ```

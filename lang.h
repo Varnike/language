@@ -24,15 +24,15 @@
 #define TOKEN				(token_arr->data[IT])
 #define IT				(token_arr->it >= token_arr->size) ? \
 						SyntaxError() : (token_arr->it)
-#define SIZE				token_arr.size
-
-#define SYMB_MATCH(type, symb)		(TYPE(TOKEN) == type && STR(TOKEN) == symb)
+#define SIZE				token_arr->size
 
 #define SYMB_MATCH(type, symb)		(TYPE(TOKEN) == type && STR(TOKEN) == symb)
 #define ID_MATCH(cmp_symb)		(LEN(TOKEN) == 1 && ID(TOKEN)[0] == cmp_symb)
+#define TYPE_MATCH(type)		(TYPE(TOKEN) == type)
 
 #define SyntaxError()			_SyntaxError(__func__, __LINE__)
-#define Require(ch)			_Require(ch, token_arr, __func__, __LINE__);
+#define Require(ch)			_Require(ch, token_arr, __func__,__LINE__);
+#define RequireT(type)			_RequireT(type, token_arr,__func__,__LINE__);
 
 #define GetG()				_GetG(token_arr)
 #define GetStmts()			_GetStmts(token_arr)
@@ -90,6 +90,9 @@ TNODE *_GetRel(parsed_arr *tokens);
 int lexer_process(textBuff *btext, parsed_arr *token_arr);
 int _Require(char cmp_symb, parsed_arr *tokens, 
 		const char *func, const int line);
+int _RequireT(int type, parsed_arr *tokens, 
+		const char *func, const int line);
+
 int _SyntaxError(const char *func, const int line);
 
 node_data tokenize_op(textBuff *btext);
