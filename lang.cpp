@@ -4,31 +4,40 @@ static void print_token(TNODE *node);
 static void connect(TNODE *parent, TNODE *lchild, TNODE *rchild);
 
 int LangProcces(char *namein)
-{// TODO ERRORS CHECK + for i remove + str -- btext
+{// TODO for i remove + str -- btext
 	textBuff btext = {};
 	parsed_arr token_arr = {};
-	
-	init("check.txt", &btext);
-	char *src_str = btext.buff;
+	char *src_str = NULL;
 
-	lexer_process(&btext, &token_arr);
+	do {
+		init("check.txt", &btext);
+		CHECK_BREAK(ERRNUM);
 
-	for (int i = 0; i != token_arr.size; i++) {
-		print_token(token_arr.data[i]);
-	}
+		src_str = btext.buff;
+		lexer_process(&btext, &token_arr);
+		CHECK_BREAK(ERRNUM);
 
-	TNODE *root = _GetG(&token_arr);
+		for (int i = 0; i != token_arr.size; i++) {
+			print_token(token_arr.data[i]);
+		}
 
-	for (int i = 0; i != token_arr.size; i++) {
-		print_token(token_arr.data[i]);
-	}
+		TNODE *root = _GetG(&token_arr);
+		CHECK_BREAK(ERRNUM);
 
-	TreeDump(root);
+		for (int i = 0; i != token_arr.size; i++) {
+			print_token(token_arr.data[i]);
+		}
 
-	TreeDtor(root);
-	
-	free(token_arr.data);
-	free(src_str);
+		TreeDump(root);
+		TreeDtor(root);
+	} while(0);
+
+	if (token_arr.data)
+		free(token_arr.data);
+	if (src_str)
+		free(src_str);
+
+	return ERRNUM;
 }
 
 int init(const char *file_in, textBuff *btext)
@@ -151,7 +160,18 @@ $	node_data tmp_data = {};
 	
 	return tmp_data;
 }
-//TODO macros
+
+#define RELOP_CMP(ifrel, els_code)				\
+	if (*(btext->buff) == '=') {				\
+		(btext->buff)++;				\
+		DATA_NUM(tmp_data) = ifrel;			\
+		return tmp_data;				\
+	} else {						\
+		els_code					\
+		return tmp_data;				\
+	}							\
+	break;
+
 node_data tokenize_relop(textBuff *btext)
 {	
 	node_data tmp_data = {};
@@ -159,50 +179,34 @@ node_data tokenize_relop(textBuff *btext)
 
 	switch (*(btext->buff)++) {
 	case '=':
-		if (*(btext->buff) == '=') {
-			(btext->buff)++;
-			DATA_NUM(tmp_data) = RELOP_EQ;
-			return tmp_data;
-		} else {
-			DATA_NUM(tmp_data) = OP_ASG;
-			tmp_data.data_type = OPER;
-			return tmp_data;
-		}
-		break;
+		RELOP_CMP(RELOP_EQ, 
+			{
+				DATA_NUM(tmp_data) = OP_ASG;
+				tmp_data.data_type = OPER;
+			});
 	case '!':
-		if (*(btext->buff) == '=') {
-			(btext->buff)++;
-			DATA_NUM(tmp_data) = RELOP_NE;
-			return tmp_data;
-		} else {
-			SyntaxError();
-		}
-		break;
+		RELOP_CMP(RELOP_NE,
+			{
+				SyntaxError();
+			});
 	case '<':
-		if (*(btext->buff) == '=') {
-			(btext->buff)++;
-			DATA_NUM(tmp_data) = RELOP_LE;
-			return tmp_data;
-		} else {
-			DATA_NUM(tmp_data) = RELOP_LT;
-			return tmp_data;
-		}
-		break;
+		RELOP_CMP(RELOP_LE,
+			{
+				DATA_NUM(tmp_data) = RELOP_LT;
+			});
 	case '>':
-		if (*(btext->buff) == '=') {
-			(btext->buff)++;
-			DATA_NUM(tmp_data) = RELOP_GE;
-			return tmp_data;
-		} else {
-			DATA_NUM(tmp_data) = RELOP_GT;
-			return tmp_data;
-		}
-		break;
+		RELOP_CMP(RELOP_GE,
+			{
+				DATA_NUM(tmp_data) = RELOP_GT;
+			});
 	default:
 		SyntaxError(); // TODO Lexer Error!
 		break;
 	}
 }
+
+#undef RELOP_CMP
+
 int isOP(char symb)
 {
 $	return (symb == OP_ADD || symb == OP_MUL || symb == OP_DIV || 
@@ -219,6 +223,7 @@ int isRelop(char symb)
 {
 	return symb == '=' || symb == '>' || symb == '<' || symb == '!';
 }
+
 #define TERM_CMP(name, type)					\
 	if (strncmp(DATA_ID(ndata), name, strlen(name)) == 0)	\
 		return type;					\
@@ -226,17 +231,6 @@ int isRelop(char symb)
 		
 int isTerm(node_data ndata) //TODO !!!!
 {
-	/*if (strncmp(DATA_ID(ndata), "if", 2) == 0) 
-		return IF;
-	else if (strncmp(DATA_ID(ndata), "else", 4) == 0) 
-		return ELSE;
-	else if (strncmp(DATA_ID(ndata), "while", 5) == 0)
-		return WHILE;
-	else if (strncmp(DATA_ID(ndata), "return", 6) == 0)
-		return RETURN;
-	else if (strncmp(DATA_ID(ndata), "break", 5) == 0)
-		return BREAK;
-	*/
 	TERM_CMP("if", IF);
 	TERM_CMP("else", ELSE);
 	TERM_CMP("while", WHILE);
@@ -244,13 +238,14 @@ int isTerm(node_data ndata) //TODO !!!!
 	TERM_CMP("break", BREAK);
 	return 0;
 }
+
 #undef TERM_CMP
 
 static void print_token(TNODE *node) 
 {
 	if (!node)
 		return;
-	printf("node : [  %p  ], datatype : [  %d  ], ", node, node->data.data_type);
+	printf("node : [  %p  ], datatype : [  %d  ],\t", node, node->data.data_type);
 	
 	switch (node->data.data_type) {
 	case CONST:
@@ -262,10 +257,11 @@ static void print_token(TNODE *node)
 	case TERM:
 	case IF:
 	case ELSE:
+	case RETURN:
 	case WHILE:
 	case BREAK:
 	case ID:
-		printf(" data : [  %.*s  ], ", LEN(node), ID(node));
+		printf("data : [  %.*s  ], ", LEN(node), ID(node));
 		break;
 	case RELOP:
 		printf("data : [  %s  ]  ", getRelopName(STR(node)));
@@ -290,14 +286,16 @@ TNODE *_GetG(parsed_arr *token_arr)
 
 TNODE *_GetStmts(parsed_arr *token_arr)
 {$
-	TNODE *node = 0;
 	if (ID_MATCH('$') || ID_MATCH('}')) {
-		return node;
+		return NULL;
 	} else {
-		TreeCtor(&node);
-		TYPE(node)  = STMT;
-		node->right = GetStmt();
-		node->left  = GetStmts();
+		CREATE_TYPE_TOKEN(node, STMT);
+		
+		TNODE *stmt  = GetStmt();
+		TNODE *stmts = GetStmts();
+
+		connect(node, stmts, stmt);
+
 		return node;
 	}
 }
@@ -339,10 +337,7 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 			Require(')');			
 			TNODE *stmt = GetStmt();
 				
-			TNODE *decs = NULL;
-			TreeCtor(&decs);
-			ERRNUM_CHECK(NULL);
-			TYPE(decs) = DECS;
+			CREATE_TYPE_TOKEN(decs, DECS);
 
 			connect(cond, decs, expr);
 
@@ -421,16 +416,10 @@ TNODE *_GetF(parsed_arr *token_arr)
 		SyntaxError();
 	
 	TNODE *body   = GetStmt();
-	TNODE *define = NULL;
-	TNODE *func   = NULL;
-
-	TreeCtor(&define);
-	TreeCtor(&func);
-	ERRNUM_CHECK(NULL);
-
-	TYPE(define) = DEFINE;
-	TYPE(func)   = FUNC;
 	
+	CREATE_TYPE_TOKEN(define, DEFINE);
+	CREATE_TYPE_TOKEN(func,   FUNC);
+
 	connect(define, func, body);
 	connect(func, name, arg);
 	
@@ -443,11 +432,8 @@ TNODE *_GetArgs(parsed_arr *token_arr)
 		return NULL;
 
 	TNODE *arg   = GetId();
-	TNODE *param = NULL;
 
-	TreeCtor(&param);
-	ERRNUM_CHECK(NULL);
-	TYPE(param) = PARAM;
+	CREATE_TYPE_TOKEN(param, PARAM);
 
 	connect(param, GetArgs(), arg);
 	
@@ -463,13 +449,8 @@ TNODE *_GetCF(parsed_arr *token_arr)
 	TNODE *args = GetArgs();
 	Require(')');
 
-	TNODE *call = NULL;
-	TNODE *func = NULL;
-	TreeCtor(&func);
-	TreeCtor(&call);
-	TYPE(call) = CALL;
-	TYPE(func) = FUNC;
-	ERRNUM_CHECK(NULL);
+	CREATE_TYPE_TOKEN(call, CALL);
+	CREATE_TYPE_TOKEN(func, FUNC);
 
 	connect(call, NULL, func);
 	connect(func, name, args);
@@ -490,13 +471,6 @@ TNODE *_GetRel(parsed_arr *token_arr)
 		CHECK_SET_ERR(!token, LANG_NULLPTR_ERR, NULL);
 
 		connect(relop, token, token2);
-		/*
-		relop->right = token2;
-		relop->left  = token;
-
-		token->parent  = relop;
-		token2->parent = relop;
-		*/
 
 		token = relop;
 	}
@@ -514,9 +488,8 @@ TNODE *_GetE(parsed_arr *token_arr)
 
 		TNODE *token2 = GetT();
 		
-		op->left  = token;
-		op->right = token2;
-		
+		connect(op, token, token2);
+
 		printf("ffffff\n");	
 		token     = op;
 	}
@@ -539,10 +512,8 @@ TNODE *_GetT(parsed_arr *token_arr)
 		CHECK_SET_ERR(!token2, LANG_NULLPTR_ERR, NULL);	
 		CHECK_SET_ERR(!op, LANG_NULLPTR_ERR, NULL);
 		
-		op->left  = token;
-		op->right = token2;
-		token->parent  = op;
-		token2->parent = op;
+		connect(op, token, token2);
+
 		token     = op;
 	}
 
@@ -552,7 +523,7 @@ TNODE *_GetT(parsed_arr *token_arr)
 TNODE *_GetP(parsed_arr *token_arr)
 {$
 	if (TYPE(TOKEN) == TERM && ID(TOKEN)[0] == '(') {
-		IT++;
+		Require('(');
 
 		TNODE *token = GetRel();
 		Require(')');	

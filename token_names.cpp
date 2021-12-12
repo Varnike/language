@@ -25,14 +25,14 @@ const char *getRelopName(int type)
 {
 	if (type >= 6 || type < 0)
 		return NULL;
-
+	//TODO !!! 
 	const char *relops_names[] = {
-		"<",
-		"<=",
-		"==",
-		"!=",
-		">",
-		">="
+		"L",	// <
+		"L=",	// <=
+		"==",	// ==
+		"!=",	// !=
+		"G",	// >
+		"G="	// >=
 	};
 	
 	return relops_names[type];

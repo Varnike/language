@@ -47,18 +47,14 @@
 #define GetId()				_GetId(token_arr)
 #define GetRel()			_GetRel(token_arr)
 
+#define CREATE_TYPE_TOKEN(name, type)				\
+	TNODE *name = NULL;					\
+	TreeCtor(&name);					\
+	ERRNUM_CHECK(NULL);					\
+	TYPE(name) = type;					\
+
 const int MAX_TOKEN_CNT = 100;
 const int MAX_ID_LEN    = 100;
-
-/*
- * 0)! TODO list for parse buff or resize!!!
- * 0)! TODO operators to char*, expand isOP()
- *
- * 1) TODO terminals file
- * 2) TODO onegin read
- * 3) TODO errs check
- * 4) TODO ? list from parsing
- */
 
 /* real problems
  *	TODO	multiple lines stmts
@@ -66,8 +62,9 @@ const int MAX_ID_LEN    = 100;
  *	TODO	some print func to other file
  *	TODO	err checks in Get* functions	
  *	TODO ?  where =?
- *	TODO	
+ *	TODO	UNARY OPERATORS!	
  */
+
 struct parsed_arr {
 	TNODE **data = nullptr;
 	int it   = 0;
