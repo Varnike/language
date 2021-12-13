@@ -38,6 +38,23 @@ const char *getRelopName(int type)
 	return relops_names[type];
 }
 
+const char *getAsmRelop(int type)
+{
+	if (type >= 6 || type < 0)
+		return NULL;
+
+	const char *rel_asm_names[] = {
+		"jb",
+		"jbl",
+		"je",
+		"jne",
+		"ja",
+		"jal"
+	};
+
+	return rel_asm_names[type];
+}
+
 const char *getTermName(int type)
 {
 	const char *term_names[] = {

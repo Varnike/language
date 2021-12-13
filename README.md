@@ -6,7 +6,7 @@ Given (x y)		# arguments
 Proof			# start of func                             
         x = 3;                                                 
                                                                
-        Considerex = x + 1; assuming expression (x > 2) perfomed;                
+        Consider x = x + 1; assuming expression (x > 2) perfomed;                
                                                                
         suppose (y == 3) perfomed	# if construction
         therefore {			# if true                   

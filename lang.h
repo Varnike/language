@@ -68,6 +68,7 @@ const int MAX_TABLE_SIZE = 10;
  *
  *	TODO	UNARY OPERATORS!	
  *	TODO	func arguments(,)
+ *	TODO	diff syntax err msgs
  */
 
 struct parsed_arr {
@@ -125,7 +126,7 @@ int LangTranslate(TNODE *root, const char *name_out);
 
 //TODO in other file
 int TableCtor(name_table *table);
-int TableInsert(name_table *table, TNODE *node, int addr);
+int TableInsert(name_table *table, TNODE *node, int addr = -1);
 int TableFind(name_table *table, TNODE *key);
 int TableDtor(name_table *table);
 #if 0

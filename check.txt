@@ -1,2 +1,7 @@
-x = 2 + 2;
+#x = 2 + 2;
+#y = x * (x - 2) + 3;
+
+x = 99;
+
+Consider x = x - 1; assuming expression (x > 2) perfomed;
 $

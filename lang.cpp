@@ -5,17 +5,6 @@ static void connect(TNODE *parent, TNODE *lchild, TNODE *rchild);
 static int trav_translate(TNODE *node, name_table *table, FILE *file);
 static uint32_t djb_hash(const char* data, size_t length);
 
-void check(TNODE *root)
-{
-	name_table table = {};
-	TableCtor(&table);
-
-	TableInsert(&table, root->right->left, 2);
-	int find = TableFind(&table, root->right->left);
-
-	printf("%d\n", find);
-}
-
 int LangProcces(char *namein)
 {// TODO for i remove + str -- btext
 	textBuff btext = {};
@@ -41,8 +30,7 @@ int LangProcces(char *namein)
 			print_token(token_arr.data[i]);
 		}
 
-		check(root);
-//		LangTranslate(root, "asm.txt");
+		LangTranslate(root, "asm.txt");
 		TreeDump(root);
 		TreeDtor(root);	
 	} while(0);
@@ -370,7 +358,7 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 				
 			CREATE_TYPE_TOKEN(decs, DECS);
 
-			connect(cond, decs, expr);
+			connect(cond, expr, decs);
 
 			if (TYPE(TOKEN) == ELSE) {
 				RequireT(ELSE);
@@ -428,7 +416,7 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 			RequireT(PERF);
 			Require(';');
 
-			connect(whileloop, stmt, expr);
+			connect(whileloop, expr, stmt);
 
 			return whileloop;
 		}
@@ -683,57 +671,124 @@ int LangTranslate(TNODE *root, const char *name_out)
 	TableDtor(&table);
 	fprintf(file_out, "hlt\n");
 	fclose(file_out);
+	system("cat asm.txt");
 
 	return 0;
 }
 
 #define LEFT				node->left
 #define RIGHT				node->right
+#define PARENT				node->parent
+#define VISIT(node)			if (node) trav_translate(node, table, file);
 
+#define INSERT(token)			TableInsert(&table, token, -1)
+#define FIND(token)			TableFind(&table, token)
+#undef  INSERT
+#undef  FIND
 int trav_translate(TNODE *node, name_table *table, FILE *file)
-{
-	ERRNUM_CHECK(ERRNUM);	
+{$
+	ERRNUM_CHECK(ERRNUM);		
+	
+	switch (TYPE(node)) {
+	case STMT: // fokin Standard XD)
+		VISIT(RIGHT);
+		VISIT(LEFT);
 
-	//switch (TYPE(node))
-	if (LEFT)
-		trav_translate(LEFT,  table, file);
-	if (RIGHT)
-		trav_translate(RIGHT, table, file);
-	//TODO in func
+		return 0;
+	case OPER:
+		if (STR(node) == OP_ASG) {
+			int addr = TableFind(table, LEFT);
+			
+			VISIT(RIGHT);
+
+			fprintf(file, "\tpop [bx+%d]\n", 
+				(addr >= 0) ? addr : TableInsert(table, LEFT));
+
+			return 0;
+		}
+		break;
+	case IF:
+		VISIT(LEFT);
+		fprintf(file, "\tpush 0\n\tjne if_t%p:\n", node);
+
+		VISIT(RIGHT->left);
+		fprintf(file, "\tjmp if_e%p\nif_t%p:\n", node, node);
+
+		VISIT(RIGHT->right);
+		fprintf(file, "if_e%p:\n", node);
+
+		return 0;
+	case WHILE:
+		fprintf(file, "while%p:\n", node);
+
+		VISIT(LEFT);
+		fprintf(file, "\tpush 0\n\tjne wskip%p\n\tjmp wend%p\nwskip%p:\n",
+			       	node, node, node);
+
+		VISIT(RIGHT);
+		fprintf(file, "\tjmp while%p\nwend%p:\n", node, node);
+
+		return 0;	
+	default:
+		break;
+	}
+
+/////
+	VISIT(LEFT);
+////
+
+/////
+	VISIT(RIGHT);
+/////
+	print_token(node);
+
 	switch (TYPE(node)) {
 	case OPER:
 		switch (STR(node)) {
 		case OP_ADD:
-			fprintf(file, "add\n");
+			fprintf(file, "\tadd\n");
 			break;
 		case OP_MUL:
-			fprintf(file, "mul\n");
+			fprintf(file, "\tmul\n");
 			break;
 		case OP_DIV:
-			fprintf(file, "div\n");
+			fprintf(file, "\tdiv\n");
 			break;
 		case OP_SUB:
-			fprintf(file, "sub\n");
-			break;
-		case OP_ASG:
-			fprintf(file, "");
+			fprintf(file, "\tsub\n");
+			break;	
 		default:
-			return ERRNUM = LANG_UNKNOWN_TYPE; // TODO err type?
+$			return ERRNUM = LANG_UNKNOWN_TYPE; // TODO err type?
 		}
 		break;
 	case CONST:
-		fprintf(file, "push %f\n", NUM(node));
+		fprintf(file, "\tpush %f\n", NUM(node));
 		break;
-	case STMT:
+	case ID:
+		{
+			int addr = TableFind(table, node);
+			if (addr < 0)
+				SyntaxError();
+
+			fprintf(file, "\tpush [bx+%d]\n", addr);
+		}
+		break;
+	case RELOP:	
+		fprintf(file, "\t%s relt%p\n", getAsmRelop(NUM(node)), node);
+		fprintf(file, "\tpush 0\n\tjmp rels%p\nrelt%p:\n\tpush 1\nrels%p:\n",
+				node, node, node);
 		break;
 	default:
-		return ERRNUM = LANG_UNKNOWN_TYPE;
+$		return ERRNUM = LANG_UNKNOWN_TYPE;
 	}
+
+	return 0;
 }
 
 #undef LEFT
 #undef RIGHT
 
+// TODO ---> other file
 static uint32_t djb_hash(const char* data, size_t length)
 {$
 	unsigned int hash = 5381; // MAGIC NUMBER
@@ -762,13 +817,16 @@ int TableInsert(name_table *table, TNODE *token, int addr)
 	CHECK_(table->size >= MAX_TABLE_SIZE, 	NTABLE_OVERFLOW);
 	CHECK_(token == NULL,			TREE_NULL_NODE);
 
-	printf("%.*s\n", LEN(token), ID(token));
+	if (addr < 0)
+		addr = table->size;
+
+	printf("---inserting %.*s---\n", LEN(token), ID(token));
 	uint32_t srch = djb_hash(ID(token), LEN(token));
 	table_node new_name = {srch, TYPE(token), addr};
 
 	table->data[table->size++] = new_name;
 
-	return 0;
+	return addr;
 }
 
 int TableFind(name_table *table, TNODE *key)

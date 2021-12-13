@@ -1,7 +1,22 @@
-push 1.000000
-push 2.000000
-push 3.000000
-push 3.000000
-add
-mul
-add
+	push 99.000000
+	pop [bx+0]
+while0x55e3e8b1ad40:
+	push [bx+0]
+	push 2.000000
+	jb relt0x55e3e8b1b000
+	push 0
+	jmp rels0x55e3e8b1b000
+relt0x55e3e8b1b000:
+	push 1
+rels0x55e3e8b1b000:
+	push 0
+	jne wskip0x55e3e8b1ad40
+	jmp wend0x55e3e8b1ad40
+wskip0x55e3e8b1ad40:
+	push [bx+0]
+	push 1.000000
+	sub
+	pop [bx+0]
+	jmp while0x55e3e8b1ad40
+wend0x55e3e8b1ad40:
+hlt
