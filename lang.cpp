@@ -2,6 +2,19 @@
 
 static void print_token(TNODE *node);
 static void connect(TNODE *parent, TNODE *lchild, TNODE *rchild);
+static int trav_translate(TNODE *node, name_table *table, FILE *file);
+static uint32_t djb_hash(const char* data, size_t length);
+
+void check(TNODE *root)
+{
+	name_table table = {};
+	TableCtor(&table);
+
+	TableInsert(&table, root->right->left, 2);
+	int find = TableFind(&table, root->right->left);
+
+	printf("%d\n", find);
+}
 
 int LangProcces(char *namein)
 {// TODO for i remove + str -- btext
@@ -28,10 +41,12 @@ int LangProcces(char *namein)
 			print_token(token_arr.data[i]);
 		}
 
+		check(root);
+//		LangTranslate(root, "asm.txt");
 		TreeDump(root);
-		TreeDtor(root);
+		TreeDtor(root);	
 	} while(0);
-
+	
 	if (token_arr.data)
 		free(token_arr.data);
 	if (src_str)
@@ -226,26 +241,27 @@ int isRelop(char symb)
 	return symb == '=' || symb == '>' || symb == '<' || symb == '!';
 }
 
-#define TERM_CMP(name, type)					\
-	if (strncmp(DATA_ID(ndata), name, strlen(name)) == 0) {	\
+#define TERM_CMP(name, type, size)				\
+	if (strncmp(DATA_ID(ndata), name,			\
+		(size > ndata.len) ? size : ndata.len) == 0) {	\
 		return type;					\
 	} else
 		
 int isTerm(node_data ndata) 
-{
-	TERM_CMP("suppose", IF)
-	TERM_CMP("however", ELSE)
-	TERM_CMP("proven", RETURN)
-	TERM_CMP("break", BREAK)
-	TERM_CMP("Theorem", THEOREM)
-	TERM_CMP("Given", GIVEN)
-	TERM_CMP("Proof", PROOF)
-	TERM_CMP("QED", QED)
-	TERM_CMP("Consider", WHILE)
-	TERM_CMP("assuming", ASSUME)
-	TERM_CMP("perfomed", PERF)
-	TERM_CMP("expression", EXPR)
-	TERM_CMP("therefore", THEREF)
+{ // TODO in arr
+	TERM_CMP("suppose",    IF, 7)
+	TERM_CMP("however",    ELSE, 7)
+	TERM_CMP("proven",     RETURN, 6)
+	TERM_CMP("break",      BREAK, 5)
+	TERM_CMP("Theorem",    THEOREM, 7)
+	TERM_CMP("Given",      GIVEN, 5)
+	TERM_CMP("Proof",      PROOF, 5)
+	TERM_CMP("QED",        QED, 3)
+	TERM_CMP("Consider",   WHILE, 8)
+	TERM_CMP("assuming",   ASSUME, 8)
+	TERM_CMP("perfomed",   PERF, 8)
+	TERM_CMP("expression", EXPR, 10)
+	TERM_CMP("therefore",  THEREF, 9)
 	return 0;
 }
 
@@ -287,6 +303,9 @@ static void print_token(TNODE *node)
 
 TNODE *_GetG(parsed_arr *token_arr)
 {$
+	ERRNUM_CHECK(NULL);
+	CHECK_SET_ERR(!token_arr, TREE_NULL_NODE, NULL);
+
 	TNODE *token = NULL;
 
 	token = GetStmts();
@@ -465,7 +484,7 @@ TNODE *_GetArgs(parsed_arr *token_arr)
 	if (ID_MATCH(')'))
 		return NULL;
 
-	TNODE *arg   = GetId();
+	TNODE *arg   = GetRel();
 
 	CREATE_TYPE_TOKEN(param, PARAM);
 
@@ -639,6 +658,142 @@ int _RequireT(int type, parsed_arr *token_arr, const char *func, const int line)
 
 int _SyntaxError(const char *func, const int line)
 {
-	fprintf(stderr, "!!!!!\n\nSyntax Error on line %d of func %s\n\n!!!!!\n", line, func);
+	fprintf(stderr, "!!!!!\n\nSyntax Error on line %d of func %s\n\n!!!!!\n", 
+			line, func);
 	assert(!"Syntax ERROR!");
+}
+
+//			--------TRANSLATION-------				//
+
+int LangTranslate(TNODE *root, const char *name_out)
+{
+	CHECK_(!name_out, LANG_NULL_FILENAME);
+	TREE_CHECK(root, ERRNUM);
+
+	FILE *file_out = fopen(name_out, "w");
+	CHECK_(!file_out, FOPEN_ERR);
+
+	name_table table = {};
+	TableCtor(&table);
+	ERRNUM_CHECK(ERRNUM);
+
+	trav_translate(root, &table, file_out);
+	ERRNUM_CHECK(ERRNUM);
+
+	TableDtor(&table);
+	fprintf(file_out, "hlt\n");
+	fclose(file_out);
+
+	return 0;
+}
+
+#define LEFT				node->left
+#define RIGHT				node->right
+
+int trav_translate(TNODE *node, name_table *table, FILE *file)
+{
+	ERRNUM_CHECK(ERRNUM);	
+
+	//switch (TYPE(node))
+	if (LEFT)
+		trav_translate(LEFT,  table, file);
+	if (RIGHT)
+		trav_translate(RIGHT, table, file);
+	//TODO in func
+	switch (TYPE(node)) {
+	case OPER:
+		switch (STR(node)) {
+		case OP_ADD:
+			fprintf(file, "add\n");
+			break;
+		case OP_MUL:
+			fprintf(file, "mul\n");
+			break;
+		case OP_DIV:
+			fprintf(file, "div\n");
+			break;
+		case OP_SUB:
+			fprintf(file, "sub\n");
+			break;
+		case OP_ASG:
+			fprintf(file, "");
+		default:
+			return ERRNUM = LANG_UNKNOWN_TYPE; // TODO err type?
+		}
+		break;
+	case CONST:
+		fprintf(file, "push %f\n", NUM(node));
+		break;
+	case STMT:
+		break;
+	default:
+		return ERRNUM = LANG_UNKNOWN_TYPE;
+	}
+}
+
+#undef LEFT
+#undef RIGHT
+
+static uint32_t djb_hash(const char* data, size_t length)
+{$
+	unsigned int hash = 5381; // MAGIC NUMBER
+	
+	for (int i = 0; i < length; ++i) {
+		hash = (hash << 5) + hash + data[i];
+	}
+
+	return hash;
+}
+
+int TableCtor(name_table *table)
+{$
+	CHECK_(!table, NTABLE_BAD_NODE);
+
+	table->data = (table_node*)calloc(sizeof(table_node), MAX_TABLE_SIZE);
+	CHECK_(table->data == NULL, CALLOC_ERR);
+
+	return 0;
+}
+
+int TableInsert(name_table *table, TNODE *token, int addr)
+{$
+	CHECK_(!table, 				NTABLE_BAD_NODE);
+	CHECK_(!table->data, 			NTABLE_BAD_NODE);
+	CHECK_(table->size >= MAX_TABLE_SIZE, 	NTABLE_OVERFLOW);
+	CHECK_(token == NULL,			TREE_NULL_NODE);
+
+	printf("%.*s\n", LEN(token), ID(token));
+	uint32_t srch = djb_hash(ID(token), LEN(token));
+	table_node new_name = {srch, TYPE(token), addr};
+
+	table->data[table->size++] = new_name;
+
+	return 0;
+}
+
+int TableFind(name_table *table, TNODE *key)
+{$
+	CHECK_(!table, 				NTABLE_BAD_NODE);
+	CHECK_(!table->data, 			NTABLE_BAD_NODE);
+	CHECK_(table->size >= MAX_TABLE_SIZE, 	NTABLE_OVERFLOW);
+	CHECK_(!key,				TREE_NULL_NODE);
+
+	uint32_t keyh = djb_hash(ID(key), LEN(key));
+
+	for (int it = 0; it != table->size; it++)
+		if (table->data[it].name == keyh)	
+			return table->data[it].addr; 
+
+	return -1;	
+}
+
+int TableDtor(name_table *table)
+{
+	CHECK_(!table, 				NTABLE_BAD_NODE);
+	CHECK_(!table->data, 			NTABLE_BAD_NODE);
+
+	free(table->data);
+	table->data = NULL;
+
+	return 0;
 }

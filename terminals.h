@@ -31,14 +31,6 @@ enum DATA_TYPES {
 	EXPR         = 26,
 	PERF         = 27,
 	THEREF       = 28
-	/*
-	LT           = 10,
-	LE           = 11,
-	EQ           = 12,
-	NE           = 13,
-	GT           = 14,
-	GE           = 15
-	*/
 };                     
 
 enum operators {

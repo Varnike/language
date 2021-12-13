@@ -82,7 +82,10 @@ const char *errmsg(int errt)
 	const char *lang_messages[] = {
 		"Language nullptr pointer error!",
 		"Language buffer overflow error!",
-		"Language unknown token type error!"
+		"Language unknown token type error!",
+		"Language null file name error!",
+		"Language bad node for name table error!",
+		"Language name table overflow"
 	};
 
 	switch (errt/100) {

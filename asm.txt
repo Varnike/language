@@ -1,0 +1,7 @@
+push 1.000000
+push 2.000000
+push 3.000000
+push 3.000000
+add
+mul
+add

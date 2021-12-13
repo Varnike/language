@@ -259,8 +259,6 @@ void TreeDotDump(TNODE *node)
 		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"saddlebrown\" >%s"
 				, get_unoper_name(node->data.value.str));
 		break;
-	case IF:
-	case ELSE:
 	case ID:
 	case BREAK:
 
@@ -271,6 +269,8 @@ void TreeDotDump(TNODE *node)
 		fprintf(file, "	\t\t<tr><td colspan=\"2\" bgcolor=\"orchid\" > %s", 
 				getRelopName(node->data.value.str));
 		break;
+	case IF:
+	case ELSE:
 	case CALL:
 	case DEFINE:
 	case WHILE:

@@ -53,8 +53,9 @@
 	ERRNUM_CHECK(NULL);					\
 	TYPE(name) = type;					\
 
-const int MAX_TOKEN_CNT = 100;
-const int MAX_ID_LEN    = 100;
+const int MAX_TOKEN_CNT  = 100;
+const int MAX_ID_LEN     = 100;
+const int MAX_TABLE_SIZE = 10;
 
 /* real problems
  *	TODO	multiple lines stmts
@@ -62,13 +63,28 @@ const int MAX_ID_LEN    = 100;
  *	TODO	some print func to other file
  *	TODO	err checks in Get* functions	
  *	TODO ?  where =?
+ *
+ *
+ *
  *	TODO	UNARY OPERATORS!	
+ *	TODO	func arguments(,)
  */
 
 struct parsed_arr {
 	TNODE **data = nullptr;
 	int it   = 0;
 	int size = 0;
+};
+
+struct table_node {
+	uint32_t name;
+	int type;	
+	int addr;
+};
+
+struct name_table {
+	table_node *data;
+	int size;
 };
 
 int LangProcces(char *namein);	
@@ -105,6 +121,13 @@ int isOP(char symb);
 int isTerm(node_data ndata);
 int isRelop(char symb);
 
+int LangTranslate(TNODE *root, const char *name_out);
+
+//TODO in other file
+int TableCtor(name_table *table);
+int TableInsert(name_table *table, TNODE *node, int addr);
+int TableFind(name_table *table, TNODE *key);
+int TableDtor(name_table *table);
 #if 0
 	textBuff btext = {};
 	char *str   = nullptr;
