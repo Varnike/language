@@ -21,9 +21,10 @@
 #define DATA_ID(node_name)		(node_name).value.id
 #define DATA_NUM(node_name)		(node_name).value.str
 
-#define TOKEN				(token_arr->data[IT])
-#define IT				(token_arr->it >= token_arr->size) ? \
-						SyntaxError() : (token_arr->it)
+#define TOKEN				(token_arr->data[(IT >= SIZE) ?\
+						SyntaxError() : IT])
+#define IT				token_arr->it
+//(token_arr->it >= token_arr->size) ? 	SyntaxError() : (token_arr->it)
 #define SIZE				token_arr->size
 
 #define SYMB_MATCH(type, symb)		(TYPE(TOKEN) == type && STR(TOKEN) == symb)
@@ -41,6 +42,7 @@
 #define GetArgs()			_GetArgs(token_arr)
 #define GetCF()				_GetCF(token_arr)
 #define GetE()				_GetE(token_arr)
+//#define GetU()				_GetU(token_arr)
 #define GetT()				_GetT(token_arr)
 #define GetP()				_GetP(token_arr)
 #define GetN()				_GetN(token_arr)
@@ -99,6 +101,7 @@ TNODE *_GetCF(parsed_arr *tokens);
 TNODE *_GetArgs(parsed_arr *tokens);
 TNODE *_GetE(parsed_arr *tokens);
 TNODE *_GetT(parsed_arr *tokens);
+TNODE *_GetU(parsed_arr *tokens);
 TNODE *_GetP(parsed_arr *tokens);
 TNODE *_GetN(parsed_arr *tokens);
 TNODE *_GetId(parsed_arr *tokens);

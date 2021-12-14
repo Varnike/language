@@ -96,3 +96,16 @@ const char *getTermName(int type)
 		return NULL;	
 	}
 }
+
+const char *getStdfName(int type)
+{
+	if (type < 0 || type >= 2)
+		return NULL;
+
+	const char *std_names[] = {
+		"in",
+		"out"
+	};
+
+	return std_names[type];
+}

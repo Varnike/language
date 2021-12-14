@@ -4,6 +4,10 @@ static void print_token(TNODE *node);
 static void connect(TNODE *parent, TNODE *lchild, TNODE *rchild);
 static int trav_translate(TNODE *node, name_table *table, FILE *file);
 static uint32_t djb_hash(const char* data, size_t length);
+static int std_func_check(TNODE *node);
+
+// To determine whether it is necessary to push or pop args if function params
+int ASM_ARG_POP = 0;
 
 int LangProcces(char *namein)
 {// TODO for i remove + str -- btext
@@ -30,8 +34,8 @@ int LangProcces(char *namein)
 			print_token(token_arr.data[i]);
 		}
 
-		LangTranslate(root, "asm.txt");
 		TreeDump(root);
+		LangTranslate(root, "asm.txt");
 		TreeDtor(root);	
 	} while(0);
 	
@@ -82,18 +86,24 @@ $		if (isspace(*(btext->buff))) {
 			(btext->buff)++;
 			comment_flag = 1; 
 			continue;
+
 		} else if (isdigit(*(btext->buff))) {
 			node_val = tokenize_no(btext);
+
 		} else if (isalpha(*(btext->buff))) {
 			node_val = tokenize_id(btext);
+
 		} else if (isOP(*(btext->buff))) {
 			node_val = tokenize_op(btext);
+
 		} else if (isTerminalChar(*(btext->buff))){
 			DATA_ID(node_val)  = (btext->buff)++;
 			node_val.len       = 1;
 			node_val.data_type = TERM;
+
 		} else if (isRelop(*(btext->buff))) {
 			node_val = tokenize_relop(btext);			
+
 		} else {
 			SyntaxError();
 		}
@@ -250,6 +260,8 @@ int isTerm(node_data ndata)
 	TERM_CMP("perfomed",   PERF, 8)
 	TERM_CMP("expression", EXPR, 10)
 	TERM_CMP("therefore",  THEREF, 9)
+	TERM_CMP("sin",        UOPER, 3)
+	TERM_CMP("cos",        UOPER, 3)
 	return 0;
 }
 
@@ -327,6 +339,18 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 		}
 	case ID:
 		{	//TODO make pretty
+			IT++;
+			if (ID_MATCH('(')) {
+				IT--;
+
+				TNODE *token = GetCF();
+
+				Require(';');
+				return token;
+			}
+
+			IT--;
+
 			TNODE *id = GetId();
 			
 			if (!SYMB_MATCH(OPER, OP_ASG))
@@ -482,8 +506,9 @@ TNODE *_GetArgs(parsed_arr *token_arr)
 }
 
 TNODE *_GetCF(parsed_arr *token_arr)
-{
+{$
 	TNODE *name = TOKEN;
+
 	IT++;
 
 	Require('(');
@@ -491,10 +516,10 @@ TNODE *_GetCF(parsed_arr *token_arr)
 	Require(')');
 
 	CREATE_TYPE_TOKEN(call, CALL);
-	CREATE_TYPE_TOKEN(func, FUNC);
+	//CREATE_TYPE_TOKEN(func, FUNC);
 
-	connect(call, NULL, func);
-	connect(func, name, args);
+	//connect(call, NULL, func);
+	connect(call, name, args);
 
 	return call;
 }
@@ -680,11 +705,9 @@ int LangTranslate(TNODE *root, const char *name_out)
 #define RIGHT				node->right
 #define PARENT				node->parent
 #define VISIT(node)			if (node) trav_translate(node, table, file);
+#define VISIT_NEW_TABLE(node, newt)	if (node) 				\
+						trav_translate(node, newt, file);
 
-#define INSERT(token)			TableInsert(&table, token, -1)
-#define FIND(token)			TableFind(&table, token)
-#undef  INSERT
-#undef  FIND
 int trav_translate(TNODE *node, name_table *table, FILE *file)
 {$
 	ERRNUM_CHECK(ERRNUM);		
@@ -729,6 +752,55 @@ int trav_translate(TNODE *node, name_table *table, FILE *file)
 		fprintf(file, "\tjmp while%p\nwend%p:\n", node, node);
 
 		return 0;	
+	case CALL:
+		{	
+			int std_flag = std_func_check(LEFT);
+			printf("\t\t%d\n", std_flag);
+			//TODO make pretty
+			if (std_flag == STD_SCAN) {	
+				fprintf(file, "\t%s\n", getStdfName(std_flag));	
+				fprintf(file, "\tpop [bx+%d]\n", 
+						TableFind(table, RIGHT->right));
+			} else if (std_flag == STD_PRINT) {
+				VISIT(RIGHT);
+				fprintf(file, "\t%s\n", getStdfName(std_flag));
+			} else {
+				VISIT(RIGHT);
+				fprintf(file, "\tcall %.*s\n", LEN(LEFT), ID(LEFT));
+				fprintf(file, "\tpush ax\n");
+			}
+		}
+		return 0;
+	case DEFINE: // TODO ERR CHECK
+		{
+		
+			name_table func_table = {};
+			TableCtor(&func_table);
+			ERRNUM_CHECK(ERRNUM);
+
+			fprintf(file, "\tjmp skipf%p\n", node);
+
+			ASM_ARG_POP = 1;
+			VISIT_NEW_TABLE(LEFT, &func_table);
+			ASM_ARG_POP = 0;
+	
+			fprintf(file, "\tpush cx\n");
+
+			VISIT_NEW_TABLE(RIGHT, &func_table);
+
+			fprintf(file, "skipf%p:\n", node);
+			TableDtor(&func_table);
+
+		}
+		return 0;
+	case PARAM:
+		if (ASM_ARG_POP) {
+			VISIT(RIGHT);
+			VISIT(LEFT);
+
+			return 0;
+		}
+		break;
 	default:
 		break;
 	}
@@ -765,7 +837,15 @@ $			return ERRNUM = LANG_UNKNOWN_TYPE; // TODO err type?
 		fprintf(file, "\tpush %f\n", NUM(node));
 		break;
 	case ID:
-		{
+		if (TYPE(PARENT) == FUNC) {
+			fprintf(file, "%.*s:\n\tpop cx\n", 
+					LEN(node), ID(node));
+		} else if (TYPE(PARENT) == PARAM && ASM_ARG_POP) {
+			int addr = TableInsert(table, node);
+			ERRNUM_CHECK(ERRNUM);
+
+			fprintf(file, "\tpop [bx+%d]\n", addr);
+		} else  {
 			int addr = TableFind(table, node);
 			if (addr < 0)
 				SyntaxError();
@@ -774,9 +854,15 @@ $			return ERRNUM = LANG_UNKNOWN_TYPE; // TODO err type?
 		}
 		break;
 	case RELOP:	
-		fprintf(file, "\t%s relt%p\n", getAsmRelop(NUM(node)), node);
+		fprintf(file, "\t%s relt%p\n", getAsmRelop(STR(node)), node);
 		fprintf(file, "\tpush 0\n\tjmp rels%p\nrelt%p:\n\tpush 1\nrels%p:\n",
 				node, node, node);
+		break;
+	case RETURN:
+		fprintf(file, "\tpop ax\n\tret\n");
+		break;
+	case PARAM:
+	case FUNC:
 		break;
 	default:
 $		return ERRNUM = LANG_UNKNOWN_TYPE;
@@ -784,9 +870,27 @@ $		return ERRNUM = LANG_UNKNOWN_TYPE;
 
 	return 0;
 }
-
 #undef LEFT
 #undef RIGHT
+
+
+#define STD_FUNC_CMP(name, type, size)				\
+	if (strncmp(ID(node), name,				\
+		(size > LEN(node)) ? size : LEN(node)) == 0) {	\
+		return type;					\
+	} else
+
+static int std_func_check(TNODE *node)
+{
+	if (!node || TYPE(node) != ID)
+		return -1;
+
+	STD_FUNC_CMP("Introduce",  STD_SCAN, 9)
+	STD_FUNC_CMP("Conclusion", STD_PRINT, 10)
+	return -1;
+}
+
+#undef STD_FUNC_CMP
 
 // TODO ---> other file
 static uint32_t djb_hash(const char* data, size_t length)
@@ -819,6 +923,9 @@ int TableInsert(name_table *table, TNODE *token, int addr)
 
 	if (addr < 0)
 		addr = table->size;
+// SLOW SLOW SLOW SLOW!
+	if (TableFind(table, token) >= 0)
+		return ERRNUM = NTABLE_REDEFINE_ERR;
 
 	printf("---inserting %.*s---\n", LEN(token), ID(token));
 	uint32_t srch = djb_hash(ID(token), LEN(token));
@@ -839,7 +946,7 @@ int TableFind(name_table *table, TNODE *key)
 	uint32_t keyh = djb_hash(ID(key), LEN(key));
 
 	for (int it = 0; it != table->size; it++)
-		if (table->data[it].name == keyh)	
+		if (TYPE(key) == table->data[it].type && table->data[it].name == keyh)
 			return table->data[it].addr; 
 
 	return -1;	

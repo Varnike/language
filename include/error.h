@@ -128,7 +128,8 @@ enum lang_errs {
 	LANG_UNKNOWN_TYPE    = 502,
 	LANG_NULL_FILENAME   = 503,
 	NTABLE_BAD_NODE      = 504,
-	NTABLE_OVERFLOW      = 505
+	NTABLE_OVERFLOW      = 505,
+	NTABLE_REDEFINE_ERR  = 506
 };
 /*
  * Returns a pointer to the textual description of the code errtype.

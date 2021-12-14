@@ -85,7 +85,8 @@ const char *errmsg(int errt)
 		"Language unknown token type error!",
 		"Language null file name error!",
 		"Language bad node for name table error!",
-		"Language name table overflow"
+		"Language name table overflow",
+		"Language redefenition error!"
 	};
 
 	switch (errt/100) {

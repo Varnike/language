@@ -1,7 +1,14 @@
-#x = 2 + 2;
-#y = x * (x - 2) + 3;
+Theorem (sum)
+Given (x y)
+Proof
+	z = x + y;
+	proven z;
+QED
 
-x = 99;
-
-Consider x = x - 1; assuming expression (x > 2) perfomed;
+y = 0;
+Introduce(y);
+x = 0;
+Introduce(x);
+z = sum(x y);
+Conclusion(z);
 $

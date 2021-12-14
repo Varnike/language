@@ -30,7 +30,7 @@ enum DATA_TYPES {
 	ASSUME       = 25,
 	EXPR         = 26,
 	PERF         = 27,
-	THEREF       = 28
+	THEREF       = 28,
 };                     
 
 enum operators {
@@ -54,23 +54,14 @@ enum relops {
 enum unary_operators {
         UOP_SIN = 'S',
         UOP_COS = 'C',
-	UOP_LOG = 'L'
+	UOP_LOG = 'L',
+	UOP_IN  = 'I',
+	UOP_OUT = 'O'
 };                    
 
-
-/*
-enum tree_tokens {
-	STATEMENT = 0,
-	CALL      = 1
-}; 
-
-struct _sample {
-	const int type;
-	const char name[];
+enum std_func {
+	STD_SCAN  = 0,
+	STD_PRINT = 1
 };
 
-struct samples {
-	const _sample = {IF, "if"};
-}
-*/
 #endif // TERMINALS_H
