@@ -21,7 +21,7 @@ enum DATA_TYPES {
 	RETURN       = 16,
 	FUNC         = 17,
 	DECS         = 18,
-	BREAK        = 19,
+	BREAK        = 19, // UNSUSED
 	THEOREM      = 20,
 	GIVEN        = 21,
 	PROOF        = 22,

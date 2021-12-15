@@ -10,7 +10,7 @@ static int std_func_check(TNODE *node);
 int ASM_ARG_POP = 0;
 
 int LangProcces(char *namein)
-{// TODO for i remove + str -- btext
+{
 	textBuff btext = {};
 	parsed_arr token_arr = {};
 	char *src_str = NULL;
@@ -71,12 +71,18 @@ int lexer_process(textBuff *btext, parsed_arr *token_arr)
 	node_data node_val = {};
 	
 	token_arr->data = (TNODE **)calloc(MAX_TOKEN_CNT, sizeof(TNODE *));
+	CHECK_(token_arr->data == NULL, CALLOC_ERR);
+
 	int comment_flag = 0;
+	btext->linecnt   = 0;
+	//int line_cnt     = 1;
 
 	while (*(btext->buff) != '\0') {
 $		if (isspace(*(btext->buff))) {
-			if (*(btext->buff) == '\n')
+			if (*(btext->buff) == '\n') {
+				btext->linecnt++;
 				comment_flag = 0;
+			}
 			(btext->buff)++;
 			continue;
 		} else if (comment_flag) {
@@ -105,7 +111,7 @@ $		if (isspace(*(btext->buff))) {
 			node_val = tokenize_relop(btext);			
 
 		} else {
-			SyntaxError();
+			LexerError(*(btext->buff), btext->linecnt); // LEXER ERR
 		}
 
 		ERRNUM_CHECK(ERRNUM);
@@ -165,7 +171,7 @@ $	node_data tmp_data = {};
 	
 	return tmp_data;
 }
-//TODO WTF WTF WTF
+
 node_data tokenize_op(textBuff *btext)
 {
 $	node_data tmp_data = {};
@@ -176,7 +182,8 @@ $	node_data tmp_data = {};
 	return tmp_data;
 }
 
-#define RELOP_CMP(ifrel, els_code)				\
+#define RELOP_CMP(expr, ifrel, els_code)			\
+	case expr:						\
 	if (*(btext->buff) == '=') {				\
 		(btext->buff)++;				\
 		DATA_NUM(tmp_data) = ifrel;			\
@@ -193,27 +200,23 @@ node_data tokenize_relop(textBuff *btext)
 	tmp_data.data_type = RELOP;
 
 	switch (*(btext->buff)++) {
-	case '=':
-		RELOP_CMP(RELOP_EQ, 
-			{
-				DATA_NUM(tmp_data) = OP_ASG;
-				tmp_data.data_type = OPER;
-			});
-	case '!':
-		RELOP_CMP(RELOP_NE,
-			{
-				SyntaxError();
-			});
-	case '<':
-		RELOP_CMP(RELOP_LE,
-			{
-				DATA_NUM(tmp_data) = RELOP_LT;
-			});
-	case '>':
-		RELOP_CMP(RELOP_GE,
-			{
-				DATA_NUM(tmp_data) = RELOP_GT;
-			});
+	RELOP_CMP('=', RELOP_EQ, 
+		{
+			DATA_NUM(tmp_data) = OP_ASG;
+			tmp_data.data_type = OPER;
+		});
+	RELOP_CMP('!',RELOP_NE,
+		{
+			LexerError(*(btext->buff), btext->linecnt);
+		});
+	RELOP_CMP('<',RELOP_LE,
+		{
+			DATA_NUM(tmp_data) = RELOP_LT;
+		});
+	RELOP_CMP('>', RELOP_GE,
+		{
+			DATA_NUM(tmp_data) = RELOP_GT;
+		});
 	default:
 		SyntaxError(); // TODO Lexer Error!
 		break;
@@ -247,7 +250,7 @@ int isRelop(char symb)
 		
 int isTerm(node_data ndata) 
 { // TODO in arr
-	TERM_CMP("suppose",    IF, 7)
+	TERM_CMP("suppose",    IF, 7) // TODO strlen
 	TERM_CMP("however",    ELSE, 7)
 	TERM_CMP("proven",     RETURN, 6)
 	TERM_CMP("break",      BREAK, 5)
@@ -261,7 +264,7 @@ int isTerm(node_data ndata)
 	TERM_CMP("expression", EXPR, 10)
 	TERM_CMP("therefore",  THEREF, 9)
 	TERM_CMP("sin",        UOPER, 3)
-	TERM_CMP("cos",        UOPER, 3)
+	TERM_CMP("cos",        UOPER, 3) // in LIB
 	return 0;
 }
 
@@ -279,15 +282,6 @@ static void print_token(TNODE *node)
 		break;
 	case OPER:
 		printf("data : [  %c  ], ", STR(node));
-		break;
-	case TERM:
-	case IF:
-	case ELSE:
-	case RETURN:
-	case WHILE:
-	case BREAK:
-	case ID:
-		printf("data : [  %.*s  ], ", LEN(node), ID(node));
 		break;
 	case RELOP:
 		printf("data : [  %s  ]  ", getRelopName(STR(node)));
@@ -315,7 +309,7 @@ TNODE *_GetG(parsed_arr *token_arr)
 }
 
 TNODE *_GetStmts(parsed_arr *token_arr)
-{$
+{$ //Require ()
 	if (ID_MATCH('$') || ID_MATCH('}') || TYPE_MATCH(QED)) {
 		return NULL;
 	} else {
@@ -366,7 +360,7 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 
 			return assign;
 		}
-	case IF:
+	case IF: //functions
 		{$
 			TNODE *cond = TOKEN;
 			IT++;
@@ -444,14 +438,6 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 
 			return whileloop;
 		}
-	case BREAK:
-		{
-			TNODE *break_t = TOKEN;
-			IT++;
-			Require(';');
-			
-			return break_t;
-		}
 	default:
 		TNODE *node = GetE();
 		Require(';');
@@ -459,7 +445,7 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 		return node;
 	}
 }
-
+//TODO rename
 TNODE *_GetF(parsed_arr *token_arr)
 {$
 	ERRNUM_CHECK(NULL);
@@ -497,6 +483,7 @@ TNODE *_GetArgs(parsed_arr *token_arr)
 		return NULL;
 
 	TNODE *arg   = GetRel();
+	// TODO GetId
 
 	CREATE_TYPE_TOKEN(param, PARAM);
 
@@ -516,9 +503,7 @@ TNODE *_GetCF(parsed_arr *token_arr)
 	Require(')');
 
 	CREATE_TYPE_TOKEN(call, CALL);
-	//CREATE_TYPE_TOKEN(func, FUNC);
 
-	//connect(call, NULL, func);
 	connect(call, name, args);
 
 	return call;
@@ -552,12 +537,10 @@ TNODE *_GetE(parsed_arr *token_arr)
 		TNODE *op = TOKEN;
 		IT++;
 
-		TNODE *token2 = GetT();
-		
+		TNODE *token2 = GetT();	
 		connect(op, token, token2);
 
-		printf("ffffff\n");	
-		token     = op;
+		token = op;
 	}
 
 	return token;
@@ -580,7 +563,7 @@ TNODE *_GetT(parsed_arr *token_arr)
 		
 		connect(op, token, token2);
 
-		token     = op;
+		token = op;
 	}
 
 	return token;
@@ -642,7 +625,7 @@ static void connect(TNODE *parent, TNODE *lchild, TNODE *rchild)
 	if (rchild)
 		rchild->parent = parent;	
 }
-
+//TODO 2 -> 1
 int _Require(char cmp_symb, parsed_arr *token_arr, const char *func, const int line)
 {
 	if (LEN(TOKEN) == 1 && ID(TOKEN)[0] == cmp_symb) {
@@ -669,13 +652,23 @@ int _RequireT(int type, parsed_arr *token_arr, const char *func, const int line)
 	}
 }
 
+int LexerError(char symb, int line)
+{
+	fprintf(stderr, "Lexer ERROR: unknown symbol \'%c\' on line %d\n!!!",
+			symb, line);
+
+	ERRNUM = LANG_LEXER_ERR;
+
+	assert(!"Lexer ERROR");
+}
+
 int _SyntaxError(const char *func, const int line)
 {
 	fprintf(stderr, "!!!!!\n\nSyntax Error on line %d of func %s\n\n!!!!!\n", 
 			line, func);
 	assert(!"Syntax ERROR!");
 }
-
+//TODO MOVE
 //			--------TRANSLATION-------				//
 
 int LangTranslate(TNODE *root, const char *name_out)
@@ -707,7 +700,6 @@ int LangTranslate(TNODE *root, const char *name_out)
 #define VISIT(node)			if (node) trav_translate(node, table, file);
 #define VISIT_NEW_TABLE(node, newt)	if (node) 				\
 						trav_translate(node, newt, file);
-
 int trav_translate(TNODE *node, name_table *table, FILE *file)
 {$
 	ERRNUM_CHECK(ERRNUM);		
@@ -753,22 +745,26 @@ int trav_translate(TNODE *node, name_table *table, FILE *file)
 
 		return 0;	
 	case CALL:
-		{	
-			int std_flag = std_func_check(LEFT);
-			printf("\t\t%d\n", std_flag);
-			//TODO make pretty
-			if (std_flag == STD_SCAN) {	
-				fprintf(file, "\t%s\n", getStdfName(std_flag));	
-				fprintf(file, "\tpop [bx+%d]\n", 
-						TableFind(table, RIGHT->right));
-			} else if (std_flag == STD_PRINT) {
-				VISIT(RIGHT);
-				fprintf(file, "\t%s\n", getStdfName(std_flag));
-			} else {
-				VISIT(RIGHT);
-				fprintf(file, "\tcall %.*s\n", LEN(LEFT), ID(LEFT));
-				fprintf(file, "\tpush ax\n");
-			}
+		switch (std_func_check(LEFT)) {	
+		case STD_SCAN:
+			fprintf(file, "\t%s\n", getStdfName(STD_SCAN));	
+			fprintf(file, "\tpop [bx+%d]\n", 
+					TableFind(table, RIGHT->right));
+			break;
+		case STD_PRINT:
+			VISIT(RIGHT);
+			fprintf(file, "\t%s\n", getStdfName(STD_PRINT));
+			break;
+		default:	
+			VISIT(RIGHT);
+			fprintf(file,"\tpush bx\n\tpush %d\n\tadd\n\tpop bx\n"
+					, table->size);
+			fprintf(file, "\tcall %.*s\n", LEN(LEFT), ID(LEFT));
+			fprintf(file,"\tpush bx\n\tpush %d\n\tsub\n\tpop bx\n"
+					, table->size);
+
+			fprintf(file, "\tpush ax\n");
+			break;
 		}
 		return 0;
 	case DEFINE: // TODO ERR CHECK
@@ -794,7 +790,7 @@ int trav_translate(TNODE *node, name_table *table, FILE *file)
 		}
 		return 0;
 	case PARAM:
-		if (ASM_ARG_POP) {
+		if (ASM_ARG_POP == 1) {
 			VISIT(RIGHT);
 			VISIT(LEFT);
 
@@ -892,7 +888,6 @@ static int std_func_check(TNODE *node)
 
 #undef STD_FUNC_CMP
 
-// TODO ---> other file
 static uint32_t djb_hash(const char* data, size_t length)
 {$
 	unsigned int hash = 5381; // MAGIC NUMBER
@@ -923,7 +918,7 @@ int TableInsert(name_table *table, TNODE *token, int addr)
 
 	if (addr < 0)
 		addr = table->size;
-// SLOW SLOW SLOW SLOW!
+// SLOW SLOW SLOW SLOW! // TODO REMOVE
 	if (TableFind(table, token) >= 0)
 		return ERRNUM = NTABLE_REDEFINE_ERR;
 

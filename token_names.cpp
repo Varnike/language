@@ -109,3 +109,24 @@ const char *getStdfName(int type)
 
 	return std_names[type];
 }
+#if 0
+const char getAsmOper(int type)
+{
+	if (type < 0 || type >= 4)
+		return NULL;
+
+	switch (type) {
+	case OP_ADD:
+		return oper_names[0];
+	case OP_MUL:
+		return oper_names[1];
+	case OP_DIV:
+		return oper_names[2];
+	case OP_SUB:
+		return oper_names[3];
+	default:
+		ERRNUM = LANG_UNKNOWN_TYPE;
+		return NULL;	
+	}
+}
+#endif 

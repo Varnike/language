@@ -1,14 +1,15 @@
-Theorem (sum)
-Given (x y)
+Theorem (Factorial)
+Given (x)
 Proof
-	z = x + y;
-	proven z;
+	y = x - 1;
+	suppose (y <= 0) perfomed 
+	therefore proven 1;
+	proven x * Factorial(y); 
 QED
 
-y = 0;
+y = 4;
 Introduce(y);
-x = 0;
-Introduce(x);
-z = sum(x y);
-Conclusion(z);
+y = Factorial(y);
+Conclusion(y);
+
 $

@@ -59,20 +59,6 @@ const int MAX_TOKEN_CNT  = 100;
 const int MAX_ID_LEN     = 100;
 const int MAX_TABLE_SIZE = 10;
 
-/* real problems
- *	TODO	multiple lines stmts
- *	TODO	terminal type(LT LE EQ and s.o.)
- *	TODO	some print func to other file
- *	TODO	err checks in Get* functions	
- *	TODO ?  where =?
- *
- *
- *
- *	TODO	UNARY OPERATORS!	
- *	TODO	func arguments(,)
- *	TODO	diff syntax err msgs
- */
-
 struct parsed_arr {
 	TNODE **data = nullptr;
 	int it   = 0;
@@ -114,6 +100,7 @@ int _RequireT(int type, parsed_arr *tokens,
 		const char *func, const int line);
 
 int _SyntaxError(const char *func, const int line);
+int LexerError(char symb, int line);
 
 node_data tokenize_op(textBuff *btext);
 node_data tokenize_no(textBuff *btext);
@@ -127,7 +114,6 @@ int isRelop(char symb);
 
 int LangTranslate(TNODE *root, const char *name_out);
 
-//TODO in other file
 int TableCtor(name_table *table);
 int TableInsert(name_table *table, TNODE *node, int addr = -1);
 int TableFind(name_table *table, TNODE *key);
