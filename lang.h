@@ -8,6 +8,7 @@
 #include "tree.h"
 #include "config.h"
 #include "include/onegin.h"
+#include "name_table.h"
 
 #define  $ 				printf("< %s >\t%d\n", __func__,__LINE__);
 //#define  $ 			printf("\t\t\t---ON LINE %d IN FUNCTION %s---\n", __LINE__, __func__);
@@ -38,11 +39,11 @@
 #define GetG()				_GetG(token_arr)
 #define GetStmts()			_GetStmts(token_arr)
 #define GetStmt()			_GetStmt(token_arr)
-#define GetF()				_GetF(token_arr)
+#define GetFunc()			_GetFunc(token_arr)
 #define GetArgs()			_GetArgs(token_arr)
-#define GetCF()				_GetCF(token_arr)
+#define GetCallArgs()			_GetCallArgs(token_arr)
+#define GetCallF()			_GetCallF(token_arr)
 #define GetE()				_GetE(token_arr)
-//#define GetU()				_GetU(token_arr)
 #define GetT()				_GetT(token_arr)
 #define GetP()				_GetP(token_arr)
 #define GetN()				_GetN(token_arr)
@@ -53,27 +54,12 @@
 	TNODE *name = NULL;					\
 	TreeCtor(&name);					\
 	ERRNUM_CHECK(NULL);					\
-	TYPE(name) = type;					\
-
-const int MAX_TOKEN_CNT  = 100;
-const int MAX_ID_LEN     = 100;
-const int MAX_TABLE_SIZE = 10;
+	TYPE(name) = type;					
 
 struct parsed_arr {
 	TNODE **data = nullptr;
 	int it   = 0;
 	int size = 0;
-};
-
-struct table_node {
-	uint32_t name;
-	int type;	
-	int addr;
-};
-
-struct name_table {
-	table_node *data;
-	int size;
 };
 
 int LangProcces(char *namein);	
@@ -82,9 +68,10 @@ int init(const char *file_in, textBuff *btext);
 TNODE *_GetG(parsed_arr *tokens);
 TNODE *_GetStmts(parsed_arr *tokens);
 TNODE *_GetStmt(parsed_arr *tokens);
-TNODE *_GetF(parsed_arr *tokens);
-TNODE *_GetCF(parsed_arr *tokens);
+TNODE *_GetFunc(parsed_arr *tokens);
+TNODE *_GetCallF(parsed_arr *tokens);
 TNODE *_GetArgs(parsed_arr *tokens);
+TNODE *_GetCallArgs(parsed_arr *tokens);
 TNODE *_GetE(parsed_arr *tokens);
 TNODE *_GetT(parsed_arr *tokens);
 TNODE *_GetU(parsed_arr *tokens);
@@ -102,22 +89,7 @@ int _RequireT(int type, parsed_arr *tokens,
 int _SyntaxError(const char *func, const int line);
 int LexerError(char symb, int line);
 
-node_data tokenize_op(textBuff *btext);
-node_data tokenize_no(textBuff *btext);
-node_data tokenize_id(textBuff *btext);
-node_data tokenize_relop(textBuff *btext);
-
-int isTerminalChar(char symb);
-int isOP(char symb);
-int isTerm(node_data ndata);
-int isRelop(char symb);
-
 int LangTranslate(TNODE *root, const char *name_out);
-
-int TableCtor(name_table *table);
-int TableInsert(name_table *table, TNODE *node, int addr = -1);
-int TableFind(name_table *table, TNODE *key);
-int TableDtor(name_table *table);
 #if 0
 	textBuff btext = {};
 	char *str   = nullptr;

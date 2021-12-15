@@ -3,8 +3,22 @@
 static void print_token(TNODE *node);
 static void connect(TNODE *parent, TNODE *lchild, TNODE *rchild);
 static int trav_translate(TNODE *node, name_table *table, FILE *file);
-static uint32_t djb_hash(const char* data, size_t length);
 static int std_func_check(TNODE *node);
+
+static int isTerminalChar(char symb);
+static int isOP(char symb);
+static int isTerm(node_data ndata);
+static int isRelop(char symb);
+
+static node_data tokenize_op(textBuff *btext);
+static node_data tokenize_no(textBuff *btext);
+static node_data tokenize_id(textBuff *btext);
+static node_data tokenize_relop(textBuff *btext);
+
+static TNODE *process_id(parsed_arr *token_arr);
+static TNODE *process_if(parsed_arr *token_arr);
+static TNODE *process_return(parsed_arr *token_arr);
+static TNODE *process_while(parsed_arr *token_arr);
 
 // To determine whether it is necessary to push or pop args if function params
 int ASM_ARG_POP = 0;
@@ -131,7 +145,7 @@ err_free_buffer:
 	return ERRNUM;
 }
 
-node_data tokenize_no(textBuff *btext)
+static node_data tokenize_no(textBuff *btext)
 {
 	$
 	node_data tmp_data = {};
@@ -146,7 +160,7 @@ node_data tokenize_no(textBuff *btext)
 	return tmp_data;
 }
 
-node_data tokenize_id(textBuff *btext)
+static node_data tokenize_id(textBuff *btext)
 {	
 $	node_data tmp_data = {};
 	
@@ -172,7 +186,7 @@ $	node_data tmp_data = {};
 	return tmp_data;
 }
 
-node_data tokenize_op(textBuff *btext)
+static node_data tokenize_op(textBuff *btext)
 {
 $	node_data tmp_data = {};
 
@@ -188,13 +202,15 @@ $	node_data tmp_data = {};
 		(btext->buff)++;				\
 		DATA_NUM(tmp_data) = ifrel;			\
 		return tmp_data;				\
-	} else {						\
+	} else if (!isRelop(*(btext->buff))) {			\
 		els_code					\
 		return tmp_data;				\
+	} else {						\
+		LexerError(*(btext->buff), btext->linecnt);	\
 	}							\
 	break;
 
-node_data tokenize_relop(textBuff *btext)
+static node_data tokenize_relop(textBuff *btext)
 {	
 	node_data tmp_data = {};
 	tmp_data.data_type = RELOP;
@@ -218,53 +234,58 @@ node_data tokenize_relop(textBuff *btext)
 			DATA_NUM(tmp_data) = RELOP_GT;
 		});
 	default:
-		SyntaxError(); // TODO Lexer Error!
+		LexerError(*(btext->buff), btext->linecnt);
 		break;
 	}
 }
 
 #undef RELOP_CMP
 
-int isOP(char symb)
+static int isOP(char symb)
 {
 $	return (symb == OP_ADD || symb == OP_MUL || symb == OP_DIV || 
 			symb == OP_SUB || symb == OP_PWR);
 }
 
-int isTerminalChar(char symb)
+static int isTerminalChar(char symb)
 {
 	return (symb == '(' || symb == ')' || symb == '{' || symb == '}' 
 			|| symb == ';' || symb == '$');
 }
 
-int isRelop(char symb)
+static int isRelop(char symb)
 {
 	return symb == '=' || symb == '>' || symb == '<' || symb == '!';
 }
 
-#define TERM_CMP(name, type, size)				\
+#define TERM_CMP(name, type)					\
 	if (strncmp(DATA_ID(ndata), name,			\
-		(size > ndata.len) ? size : ndata.len) == 0) {	\
+			((size = strlen(name)) > ndata.len) ? 	\
+			size : ndata.len) == 0) {		\
 		return type;					\
 	} else
+
 		
-int isTerm(node_data ndata) 
-{ // TODO in arr
-	TERM_CMP("suppose",    IF, 7) // TODO strlen
-	TERM_CMP("however",    ELSE, 7)
-	TERM_CMP("proven",     RETURN, 6)
-	TERM_CMP("break",      BREAK, 5)
-	TERM_CMP("Theorem",    THEOREM, 7)
-	TERM_CMP("Given",      GIVEN, 5)
-	TERM_CMP("Proof",      PROOF, 5)
-	TERM_CMP("QED",        QED, 3)
-	TERM_CMP("Consider",   WHILE, 8)
-	TERM_CMP("assuming",   ASSUME, 8)
-	TERM_CMP("perfomed",   PERF, 8)
-	TERM_CMP("expression", EXPR, 10)
-	TERM_CMP("therefore",  THEREF, 9)
-	TERM_CMP("sin",        UOPER, 3)
-	TERM_CMP("cos",        UOPER, 3) // in LIB
+static int isTerm(node_data ndata) 
+{
+	int size = 0;
+
+	TERM_CMP("suppose",    IF)	
+	TERM_CMP("however",    ELSE)
+	TERM_CMP("proven",     RETURN)
+	TERM_CMP("break",      BREAK)
+	TERM_CMP("Theorem",    THEOREM)
+	TERM_CMP("Given",      GIVEN)
+	TERM_CMP("Proof",      PROOF)
+	TERM_CMP("QED",        QED)
+	TERM_CMP("Consider",   WHILE)
+	TERM_CMP("assuming",   ASSUME)
+	TERM_CMP("perfomed",   PERF)
+	TERM_CMP("expression", EXPR)
+	TERM_CMP("therefore",  THEREF)
+	TERM_CMP("sin",        UOPER)
+	TERM_CMP("cos",        UOPER)
+
 	return 0;
 }
 
@@ -309,7 +330,7 @@ TNODE *_GetG(parsed_arr *token_arr)
 }
 
 TNODE *_GetStmts(parsed_arr *token_arr)
-{$ //Require ()
+{$ 
 	if (ID_MATCH('$') || ID_MATCH('}') || TYPE_MATCH(QED)) {
 		return NULL;
 	} else {
@@ -328,79 +349,13 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 {$
 	switch (TYPE(TOKEN)) {
 	case THEOREM:
-		{
-			return GetF();	
-		}
+		return GetFunc();	
 	case ID:
-		{	//TODO make pretty
-			IT++;
-			if (ID_MATCH('(')) {
-				IT--;
-
-				TNODE *token = GetCF();
-
-				Require(';');
-				return token;
-			}
-
-			IT--;
-
-			TNODE *id = GetId();
-			
-			if (!SYMB_MATCH(OPER, OP_ASG))
-				SyntaxError();
-
-			TNODE *assign = TOKEN;
-			IT++;
-			TNODE *expr = GetE();
-
-			connect(assign, id, expr);
-			
-			Require(';');
-
-			return assign;
-		}
-	case IF: //functions
-		{$
-			TNODE *cond = TOKEN;
-			IT++;
-
-			Require('(');	
-			TNODE *expr = GetRel();
-			Require(')');
-
-			RequireT(PERF);
-			RequireT(THEREF);
-
-			TNODE *stmt = GetStmt();
-				
-			CREATE_TYPE_TOKEN(decs, DECS);
-
-			connect(cond, expr, decs);
-
-			if (TYPE(TOKEN) == ELSE) {
-				RequireT(ELSE);
-
-				TNODE *els = GetStmt();
-				connect(decs, els, stmt);
-			} else {
-				connect(decs, NULL, stmt);
-			}
-
-			return cond;
-		}	
+		return process_id(token_arr);
+	case IF: 
+		return process_if(token_arr);
 	case RETURN:
-		{
-			TNODE *ret = TOKEN;
-			IT++;
-
-			TNODE *token = GetRel();
-			Require(';');
-			
-			connect(ret, NULL, token);
-
-			return ret;
-		}
+		return process_return(token_arr);
 	case PROOF:
 		{
 			RequireT(PROOF);
@@ -418,26 +373,7 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 			return stmt;
 		}
 	case WHILE:
-		{
-			TNODE *whileloop = TOKEN;
-			IT++;
-		
-			TNODE *stmt = GetStmt();
-	
-			RequireT(ASSUME);
-			RequireT(EXPR);
-
-			Require('(');	
-			TNODE *expr = GetRel();
-			Require(')');
-
-			RequireT(PERF);
-			Require(';');
-
-			connect(whileloop, expr, stmt);
-
-			return whileloop;
-		}
+		return process_while(token_arr);
 	default:
 		TNODE *node = GetE();
 		Require(';');
@@ -445,8 +381,104 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 		return node;
 	}
 }
-//TODO rename
-TNODE *_GetF(parsed_arr *token_arr)
+
+static TNODE *process_id(parsed_arr *token_arr)
+{
+	IT++;
+
+	if (ID_MATCH('(')) {
+		IT--;
+
+		TNODE *token = GetCallF();
+
+		Require(';');
+		return token;
+	}
+
+	IT--;
+
+	TNODE *id = GetId();
+	
+	if (!SYMB_MATCH(OPER, OP_ASG))
+		SyntaxError();
+
+	TNODE *assign = TOKEN;
+	IT++;
+	TNODE *expr = GetE();
+
+	connect(assign, id, expr);
+	
+	Require(';');
+
+	return assign;
+}
+
+static TNODE *process_if(parsed_arr *token_arr)
+{
+	TNODE *cond = TOKEN;
+	IT++;
+
+	Require('(');	
+	TNODE *expr = GetRel();
+	Require(')');
+
+	RequireT(PERF);
+	RequireT(THEREF);
+
+	TNODE *stmt = GetStmt();
+		
+	CREATE_TYPE_TOKEN(decs, DECS);
+
+	connect(cond, expr, decs);
+
+	if (TYPE(TOKEN) == ELSE) {
+		RequireT(ELSE);
+
+		TNODE *els = GetStmt();
+		connect(decs, els, stmt);
+	} else {
+		connect(decs, NULL, stmt);
+	}
+
+	return cond;
+}
+
+static TNODE *process_return(parsed_arr *token_arr)
+{
+	TNODE *ret = TOKEN;
+	IT++;
+
+	TNODE *token = GetRel();
+	Require(';');
+	
+	connect(ret, NULL, token);
+
+	return ret;
+}
+
+static TNODE *process_while(parsed_arr *token_arr)
+{
+	TNODE *whileloop = TOKEN;
+	IT++;
+
+	TNODE *stmt = GetStmt();
+
+	RequireT(ASSUME);
+	RequireT(EXPR);
+
+	Require('(');	
+	TNODE *expr = GetRel();
+	Require(')');
+
+	RequireT(PERF);
+	Require(';');
+
+	connect(whileloop, expr, stmt);
+
+	return whileloop;
+}
+
+TNODE *_GetFunc(parsed_arr *token_arr)
 {$
 	ERRNUM_CHECK(NULL);
 	
@@ -482,8 +514,7 @@ TNODE *_GetArgs(parsed_arr *token_arr)
 	if (ID_MATCH(')'))
 		return NULL;
 
-	TNODE *arg   = GetRel();
-	// TODO GetId
+	TNODE *arg   = GetId();
 
 	CREATE_TYPE_TOKEN(param, PARAM);
 
@@ -492,14 +523,14 @@ TNODE *_GetArgs(parsed_arr *token_arr)
 	return param;
 }
 
-TNODE *_GetCF(parsed_arr *token_arr)
+TNODE *_GetCallF(parsed_arr *token_arr)
 {$
 	TNODE *name = TOKEN;
 
 	IT++;
 
 	Require('(');
-	TNODE *args = GetArgs();
+	TNODE *args = GetCallArgs();
 	Require(')');
 
 	CREATE_TYPE_TOKEN(call, CALL);
@@ -507,6 +538,20 @@ TNODE *_GetCF(parsed_arr *token_arr)
 	connect(call, name, args);
 
 	return call;
+}
+
+TNODE *_GetCallArgs(parsed_arr *token_arr)
+{$
+	if (ID_MATCH(')'))
+		return NULL;
+
+	TNODE *arg   = GetRel();
+
+	CREATE_TYPE_TOKEN(param, PARAM);
+
+	connect(param, GetCallArgs(), arg);
+	
+	return param;
 }
 
 TNODE *_GetRel(parsed_arr *token_arr)
@@ -584,7 +629,7 @@ TNODE *_GetP(parsed_arr *token_arr)
 		IT++;
 		if (ID_MATCH('(')) {
 			IT--;
-			return GetCF();
+			return GetCallF();
 		}
 		IT--;
 		return GetId();
@@ -625,7 +670,11 @@ static void connect(TNODE *parent, TNODE *lchild, TNODE *rchild)
 	if (rchild)
 		rchild->parent = parent;	
 }
+
 //TODO 2 -> 1
+
+#define __REQUIRE(name ,cond, fail_act) 
+#undef  __REQUIRE
 int _Require(char cmp_symb, parsed_arr *token_arr, const char *func, const int line)
 {
 	if (LEN(TOKEN) == 1 && ID(TOKEN)[0] == cmp_symb) {
@@ -700,6 +749,8 @@ int LangTranslate(TNODE *root, const char *name_out)
 #define VISIT(node)			if (node) trav_translate(node, table, file);
 #define VISIT_NEW_TABLE(node, newt)	if (node) 				\
 						trav_translate(node, newt, file);
+#define PRINT(...)			fprintf(file, __VA_ARGS__)
+
 int trav_translate(TNODE *node, name_table *table, FILE *file)
 {$
 	ERRNUM_CHECK(ERRNUM);		
@@ -866,6 +917,21 @@ $		return ERRNUM = LANG_UNKNOWN_TYPE;
 
 	return 0;
 }
+
+static int asm_if(TNODE *node, name_table *table, FILE *file)
+{
+	VISIT(LEFT);
+	PRINT("\tpush 0\n");
+	PRINT("\tjne if_t%p:\n", node);
+
+	VISIT(RIGHT->left);
+	fprintf(file, "\tjmp if_e%p\nif_t%p:\n", node, node);
+
+	VISIT(RIGHT->right);
+	fprintf(file, "if_e%p:\n", node);
+
+	return 0;
+}
 #undef LEFT
 #undef RIGHT
 
@@ -886,74 +952,3 @@ static int std_func_check(TNODE *node)
 	return -1;
 }
 
-#undef STD_FUNC_CMP
-
-static uint32_t djb_hash(const char* data, size_t length)
-{$
-	unsigned int hash = 5381; // MAGIC NUMBER
-	
-	for (int i = 0; i < length; ++i) {
-		hash = (hash << 5) + hash + data[i];
-	}
-
-	return hash;
-}
-
-int TableCtor(name_table *table)
-{$
-	CHECK_(!table, NTABLE_BAD_NODE);
-
-	table->data = (table_node*)calloc(sizeof(table_node), MAX_TABLE_SIZE);
-	CHECK_(table->data == NULL, CALLOC_ERR);
-
-	return 0;
-}
-
-int TableInsert(name_table *table, TNODE *token, int addr)
-{$
-	CHECK_(!table, 				NTABLE_BAD_NODE);
-	CHECK_(!table->data, 			NTABLE_BAD_NODE);
-	CHECK_(table->size >= MAX_TABLE_SIZE, 	NTABLE_OVERFLOW);
-	CHECK_(token == NULL,			TREE_NULL_NODE);
-
-	if (addr < 0)
-		addr = table->size;
-// SLOW SLOW SLOW SLOW! // TODO REMOVE
-	if (TableFind(table, token) >= 0)
-		return ERRNUM = NTABLE_REDEFINE_ERR;
-
-	printf("---inserting %.*s---\n", LEN(token), ID(token));
-	uint32_t srch = djb_hash(ID(token), LEN(token));
-	table_node new_name = {srch, TYPE(token), addr};
-
-	table->data[table->size++] = new_name;
-
-	return addr;
-}
-
-int TableFind(name_table *table, TNODE *key)
-{$
-	CHECK_(!table, 				NTABLE_BAD_NODE);
-	CHECK_(!table->data, 			NTABLE_BAD_NODE);
-	CHECK_(table->size >= MAX_TABLE_SIZE, 	NTABLE_OVERFLOW);
-	CHECK_(!key,				TREE_NULL_NODE);
-
-	uint32_t keyh = djb_hash(ID(key), LEN(key));
-
-	for (int it = 0; it != table->size; it++)
-		if (TYPE(key) == table->data[it].type && table->data[it].name == keyh)
-			return table->data[it].addr; 
-
-	return -1;	
-}
-
-int TableDtor(name_table *table)
-{
-	CHECK_(!table, 				NTABLE_BAD_NODE);
-	CHECK_(!table->data, 			NTABLE_BAD_NODE);
-
-	free(table->data);
-	table->data = NULL;
-
-	return 0;
-}

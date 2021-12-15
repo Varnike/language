@@ -1,15 +1,17 @@
 Theorem (Factorial)
 Given (x)
 Proof
-	y = x - 1;
-	suppose (y <= 0) perfomed 
+	suppose (x <= 1) perfomed 
 	therefore proven 1;
-	proven x * Factorial(y); 
+	proven x * Factorial(x - 1); 
 QED
 
-y = 4;
+y = 0;
 Introduce(y);
-y = Factorial(y);
-Conclusion(y);
 
+Consider {
+	z = Factorial(y); 
+	y = y - 1; 
+	Conclusion(z);
+} assuming expression (y > 0) perfomed;
 $
