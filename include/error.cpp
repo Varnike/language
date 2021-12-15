@@ -89,7 +89,8 @@ const char *errmsg(int errt)
 		"Language asm translation error!",
 		"Language bad node for name table error!",
 		"Language name table overflow",
-		"Language redefenition error!"
+		"Language redefenition error!",
+		"Language uninitialized variavle!"
 	};
 
 	switch (errt/100) {

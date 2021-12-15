@@ -109,12 +109,15 @@ const char *getStdfName(int type)
 
 	return std_names[type];
 }
-#if 0
-const char getAsmOper(int type)
-{
-	if (type < 0 || type >= 4)
-		return NULL;
 
+const char *getAsmOper(int type)
+{
+	const char *oper_names[] = {
+		"add",
+		"mul",
+		"div",
+		"sub"
+	};
 	switch (type) {
 	case OP_ADD:
 		return oper_names[0];
@@ -129,4 +132,4 @@ const char getAsmOper(int type)
 		return NULL;	
 	}
 }
-#endif 
+ 

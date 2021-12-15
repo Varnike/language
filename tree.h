@@ -28,7 +28,7 @@
 	}									\
 }
 
-#define CHECK_BREAK(what)	if (what) break;
+#define CHECK_BREAK(what)	if (what) {perror(errmsg(ERRNUM)); break;}
 
 #define ERRNUM_CHECK(ret_val)   						\
 	{									\

@@ -1,9 +1,9 @@
 #include "lang.h"
 
-static void print_token(TNODE *node);
+FILE *dump_file = stdout;
+
+static void print_token(TNODE *node, FILE *file = dump_file);
 static void connect(TNODE *parent, TNODE *lchild, TNODE *rchild);
-static int trav_translate(TNODE *node, name_table *table, FILE *file);
-static int std_func_check(TNODE *node);
 
 static int isTerminalChar(char symb);
 static int isOP(char symb);
@@ -20,16 +20,16 @@ static TNODE *process_if(parsed_arr *token_arr);
 static TNODE *process_return(parsed_arr *token_arr);
 static TNODE *process_while(parsed_arr *token_arr);
 
-// To determine whether it is necessary to push or pop args if function params
-int ASM_ARG_POP = 0;
-
 int LangProcces(char *namein)
 {
 	textBuff btext = {};
 	parsed_arr token_arr = {};
 	char *src_str = NULL;
-
+	
 	do {
+		dump_file = fopen("lang_dump.txt", "w");
+		CHECK_(dump_file == NULL, FOPEN_ERR);
+
 		init("check.txt", &btext);
 		CHECK_BREAK(ERRNUM);
 
@@ -37,26 +37,31 @@ int LangProcces(char *namein)
 		lexer_process(&btext, &token_arr);
 		CHECK_BREAK(ERRNUM);
 
-		for (int i = 0; i != token_arr.size; i++) {
-			print_token(token_arr.data[i]);
+		for (int it = 0; it != token_arr.size; it++) {
+			print_token(token_arr.data[it]);
 		}
 
 		TNODE *root = _GetG(&token_arr);
 		CHECK_BREAK(ERRNUM);
 
-		for (int i = 0; i != token_arr.size; i++) {
-			print_token(token_arr.data[i]);
+		for (int it = 0; it != token_arr.size; it++) {
+			print_token(token_arr.data[it]);
 		}
 
 		TreeDump(root);
+		
 		LangTranslate(root, "asm.txt");
+
 		TreeDtor(root);	
 	} while(0);
+	
 	
 	if (token_arr.data)
 		free(token_arr.data);
 	if (src_str)
 		free(src_str);
+	if (dump_file != NULL || dump_file != stdout)
+		fclose(dump_file);
 
 	return ERRNUM;
 }
@@ -139,8 +144,6 @@ $		if (isspace(*(btext->buff))) {
 	}
 
 err_free_buffer:
-	if (ERRNUM)
-		free(token_arr->data);
 	
 	return ERRNUM;
 }
@@ -151,8 +154,6 @@ static node_data tokenize_no(textBuff *btext)
 	node_data tmp_data = {};
 
 	double val = strtod((btext->buff), &(btext->buff));	
-
-	printf("number: %f\n str: %s\n", val, (btext->buff));
 
 	tmp_data.value.num = val;
 	tmp_data.data_type = CONST;
@@ -283,36 +284,35 @@ static int isTerm(node_data ndata)
 	TERM_CMP("perfomed",   PERF)
 	TERM_CMP("expression", EXPR)
 	TERM_CMP("therefore",  THEREF)
-	TERM_CMP("sin",        UOPER)
-	TERM_CMP("cos",        UOPER)
 
 	return 0;
 }
 
 #undef TERM_CMP
 
-static void print_token(TNODE *node) 
+static void print_token(TNODE *node, FILE *file) 
 {
 	if (!node)
 		return;
-	printf("node : [  %p  ], datatype : [  %d  ],\t", node, node->data.data_type);
+	fprintf(file, "node : [  %p  ], datatype : [  %d  ],\t", 
+			node, node->data.data_type);
 	
 	switch (node->data.data_type) {
 	case CONST:
-		printf("data : [  %lg  ], ", node->data.value.num);
+		fprintf(file, "data : [  %lg  ], ", node->data.value.num);
 		break;
 	case OPER:
-		printf("data : [  %c  ], ", STR(node));
+		fprintf(file, "data : [  %c  ], ", STR(node));
 		break;
 	case RELOP:
-		printf("data : [  %s  ]  ", getRelopName(STR(node)));
+		fprintf(file, "data : [  %s  ]  ", getRelopName(STR(node)));
 		break;
 	default:
-		printf("data : [  %.*s  ], ", LEN(node), ID(node));
+		fprintf(file, "data : [  %.*s  ], ", LEN(node), ID(node));
 		break;
 	}
 
-	printf("\tleft : [  %p  ],\tright : [  %p  ],\tparent : [  %p  ]\n", 
+	fprintf(file, "\tleft : [  %p  ],\tright : [  %p  ],\tparent : [  %p  ]\n", 
 			node->left, node->right, node->parent);                             
 }
 
@@ -671,10 +671,6 @@ static void connect(TNODE *parent, TNODE *lchild, TNODE *rchild)
 		rchild->parent = parent;	
 }
 
-//TODO 2 -> 1
-
-#define __REQUIRE(name ,cond, fail_act) 
-#undef  __REQUIRE
 int _Require(char cmp_symb, parsed_arr *token_arr, const char *func, const int line)
 {
 	if (LEN(TOKEN) == 1 && ID(TOKEN)[0] == cmp_symb) {
@@ -717,238 +713,3 @@ int _SyntaxError(const char *func, const int line)
 			line, func);
 	assert(!"Syntax ERROR!");
 }
-//TODO MOVE
-//			--------TRANSLATION-------				//
-
-int LangTranslate(TNODE *root, const char *name_out)
-{
-	CHECK_(!name_out, LANG_NULL_FILENAME);
-	TREE_CHECK(root, ERRNUM);
-
-	FILE *file_out = fopen(name_out, "w");
-	CHECK_(!file_out, FOPEN_ERR);
-
-	name_table table = {};
-	TableCtor(&table);
-	ERRNUM_CHECK(ERRNUM);
-
-	trav_translate(root, &table, file_out);
-	ERRNUM_CHECK(ERRNUM);
-
-	TableDtor(&table);
-	fprintf(file_out, "hlt\n");
-	fclose(file_out);
-	system("cat asm.txt");
-
-	return 0;
-}
-
-#define LEFT				node->left
-#define RIGHT				node->right
-#define PARENT				node->parent
-#define VISIT(node)			if (node) trav_translate(node, table, file);
-#define VISIT_NEW_TABLE(node, newt)	if (node) 				\
-						trav_translate(node, newt, file);
-#define PRINT(...)			fprintf(file, __VA_ARGS__)
-
-int trav_translate(TNODE *node, name_table *table, FILE *file)
-{$
-	ERRNUM_CHECK(ERRNUM);		
-	
-	switch (TYPE(node)) {
-	case STMT: // fokin Standard XD)
-		VISIT(RIGHT);
-		VISIT(LEFT);
-
-		return 0;
-	case OPER:
-		if (STR(node) == OP_ASG) {
-			int addr = TableFind(table, LEFT);
-			
-			VISIT(RIGHT);
-
-			fprintf(file, "\tpop [bx+%d]\n", 
-				(addr >= 0) ? addr : TableInsert(table, LEFT));
-
-			return 0;
-		}
-		break;
-	case IF:
-		VISIT(LEFT);
-		fprintf(file, "\tpush 0\n\tjne if_t%p:\n", node);
-
-		VISIT(RIGHT->left);
-		fprintf(file, "\tjmp if_e%p\nif_t%p:\n", node, node);
-
-		VISIT(RIGHT->right);
-		fprintf(file, "if_e%p:\n", node);
-
-		return 0;
-	case WHILE:
-		fprintf(file, "while%p:\n", node);
-
-		VISIT(LEFT);
-		fprintf(file, "\tpush 0\n\tjne wskip%p\n\tjmp wend%p\nwskip%p:\n",
-			       	node, node, node);
-
-		VISIT(RIGHT);
-		fprintf(file, "\tjmp while%p\nwend%p:\n", node, node);
-
-		return 0;	
-	case CALL:
-		switch (std_func_check(LEFT)) {	
-		case STD_SCAN:
-			fprintf(file, "\t%s\n", getStdfName(STD_SCAN));	
-			fprintf(file, "\tpop [bx+%d]\n", 
-					TableFind(table, RIGHT->right));
-			break;
-		case STD_PRINT:
-			VISIT(RIGHT);
-			fprintf(file, "\t%s\n", getStdfName(STD_PRINT));
-			break;
-		default:	
-			VISIT(RIGHT);
-			fprintf(file,"\tpush bx\n\tpush %d\n\tadd\n\tpop bx\n"
-					, table->size);
-			fprintf(file, "\tcall %.*s\n", LEN(LEFT), ID(LEFT));
-			fprintf(file,"\tpush bx\n\tpush %d\n\tsub\n\tpop bx\n"
-					, table->size);
-
-			fprintf(file, "\tpush ax\n");
-			break;
-		}
-		return 0;
-	case DEFINE: // TODO ERR CHECK
-		{
-		
-			name_table func_table = {};
-			TableCtor(&func_table);
-			ERRNUM_CHECK(ERRNUM);
-
-			fprintf(file, "\tjmp skipf%p\n", node);
-
-			ASM_ARG_POP = 1;
-			VISIT_NEW_TABLE(LEFT, &func_table);
-			ASM_ARG_POP = 0;
-	
-			fprintf(file, "\tpush cx\n");
-
-			VISIT_NEW_TABLE(RIGHT, &func_table);
-
-			fprintf(file, "skipf%p:\n", node);
-			TableDtor(&func_table);
-
-		}
-		return 0;
-	case PARAM:
-		if (ASM_ARG_POP == 1) {
-			VISIT(RIGHT);
-			VISIT(LEFT);
-
-			return 0;
-		}
-		break;
-	default:
-		break;
-	}
-
-/////
-	VISIT(LEFT);
-////
-
-/////
-	VISIT(RIGHT);
-/////
-	print_token(node);
-
-	switch (TYPE(node)) {
-	case OPER:
-		switch (STR(node)) {
-		case OP_ADD:
-			fprintf(file, "\tadd\n");
-			break;
-		case OP_MUL:
-			fprintf(file, "\tmul\n");
-			break;
-		case OP_DIV:
-			fprintf(file, "\tdiv\n");
-			break;
-		case OP_SUB:
-			fprintf(file, "\tsub\n");
-			break;	
-		default:
-$			return ERRNUM = LANG_UNKNOWN_TYPE; // TODO err type?
-		}
-		break;
-	case CONST:
-		fprintf(file, "\tpush %f\n", NUM(node));
-		break;
-	case ID:
-		if (TYPE(PARENT) == FUNC) {
-			fprintf(file, "%.*s:\n\tpop cx\n", 
-					LEN(node), ID(node));
-		} else if (TYPE(PARENT) == PARAM && ASM_ARG_POP) {
-			int addr = TableInsert(table, node);
-			ERRNUM_CHECK(ERRNUM);
-
-			fprintf(file, "\tpop [bx+%d]\n", addr);
-		} else  {
-			int addr = TableFind(table, node);
-			if (addr < 0)
-				SyntaxError();
-
-			fprintf(file, "\tpush [bx+%d]\n", addr);
-		}
-		break;
-	case RELOP:	
-		fprintf(file, "\t%s relt%p\n", getAsmRelop(STR(node)), node);
-		fprintf(file, "\tpush 0\n\tjmp rels%p\nrelt%p:\n\tpush 1\nrels%p:\n",
-				node, node, node);
-		break;
-	case RETURN:
-		fprintf(file, "\tpop ax\n\tret\n");
-		break;
-	case PARAM:
-	case FUNC:
-		break;
-	default:
-$		return ERRNUM = LANG_UNKNOWN_TYPE;
-	}
-
-	return 0;
-}
-
-static int asm_if(TNODE *node, name_table *table, FILE *file)
-{
-	VISIT(LEFT);
-	PRINT("\tpush 0\n");
-	PRINT("\tjne if_t%p:\n", node);
-
-	VISIT(RIGHT->left);
-	fprintf(file, "\tjmp if_e%p\nif_t%p:\n", node, node);
-
-	VISIT(RIGHT->right);
-	fprintf(file, "if_e%p:\n", node);
-
-	return 0;
-}
-#undef LEFT
-#undef RIGHT
-
-
-#define STD_FUNC_CMP(name, type, size)				\
-	if (strncmp(ID(node), name,				\
-		(size > LEN(node)) ? size : LEN(node)) == 0) {	\
-		return type;					\
-	} else
-
-static int std_func_check(TNODE *node)
-{
-	if (!node || TYPE(node) != ID)
-		return -1;
-
-	STD_FUNC_CMP("Introduce",  STD_SCAN, 9)
-	STD_FUNC_CMP("Conclusion", STD_PRINT, 10)
-	return -1;
-}
-

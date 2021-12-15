@@ -9,8 +9,10 @@
 #include "config.h"
 #include "include/onegin.h"
 #include "name_table.h"
+#include "backend.h"
 
-#define  $ 				printf("< %s >\t%d\n", __func__,__LINE__);
+#define  $ 				fprintf(dump_file,		\
+			"< %s >\t%d\n", __func__,__LINE__);
 //#define  $ 			printf("\t\t\t---ON LINE %d IN FUNCTION %s---\n", __LINE__, __func__);
 
 #define NUM(node_name) 			(node_name)->data.value.num
@@ -25,7 +27,6 @@
 #define TOKEN				(token_arr->data[(IT >= SIZE) ?\
 						SyntaxError() : IT])
 #define IT				token_arr->it
-//(token_arr->it >= token_arr->size) ? 	SyntaxError() : (token_arr->it)
 #define SIZE				token_arr->size
 
 #define SYMB_MATCH(type, symb)		(TYPE(TOKEN) == type && STR(TOKEN) == symb)
@@ -55,6 +56,10 @@
 	TreeCtor(&name);					\
 	ERRNUM_CHECK(NULL);					\
 	TYPE(name) = type;					
+
+
+const int MAX_TOKEN_CNT  = 1000;
+const int MAX_ID_LEN     = 100;
 
 struct parsed_arr {
 	TNODE **data = nullptr;
@@ -89,7 +94,6 @@ int _RequireT(int type, parsed_arr *tokens,
 int _SyntaxError(const char *func, const int line);
 int LexerError(char symb, int line);
 
-int LangTranslate(TNODE *root, const char *name_out);
 #if 0
 	textBuff btext = {};
 	char *str   = nullptr;
