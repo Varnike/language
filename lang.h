@@ -48,6 +48,7 @@
 #define GetT()				_GetT(token_arr)
 #define GetP()				_GetP(token_arr)
 #define GetN()				_GetN(token_arr)
+#define GetArr()			_GetArr(token_arr)	
 #define GetId()				_GetId(token_arr)
 #define GetRel()			_GetRel(token_arr)
 
@@ -82,6 +83,7 @@ TNODE *_GetT(parsed_arr *tokens);
 TNODE *_GetU(parsed_arr *tokens);
 TNODE *_GetP(parsed_arr *tokens);
 TNODE *_GetN(parsed_arr *tokens);
+TNODE *_GetArr(parsed_arr *tokens);
 TNODE *_GetId(parsed_arr *tokens);
 TNODE *_GetRel(parsed_arr *tokens);
 

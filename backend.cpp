@@ -68,9 +68,15 @@ int trav_translate(TNODE *node, name_table *table, FILE *file)
 			int addr = TableFind(table, LEFT);
 			
 			VISIT(RIGHT);
-
-			PRINT("\tpop [bx+%d]\n", 
+			
+			if (LEFT->left) {
+				ASM_ARG_POP = 1;
+				VISIT(LEFT);
+				ASM_ARG_POP = 0;
+			} else { 
+				PRINT("\tpop [bx+%d]\n", 
 				(addr >= 0) ? addr : TableInsert(table, LEFT));
+			}
 
 			return 0;
 		}
@@ -91,6 +97,15 @@ int trav_translate(TNODE *node, name_table *table, FILE *file)
 			return 0;
 		}
 		break;
+	case ARR_INIT:
+		{
+			int addr = TableFind(table, LEFT);
+			if (addr >= 0)
+				return ERRNUM = TRANSL_DOUBLE_INIT;
+
+			TableInsert(table, LEFT, (int)NUM(LEFT->left));
+			return 0;
+		}
 	default:
 		break;
 	}
@@ -136,6 +151,7 @@ $		return ERRNUM = LANG_UNKNOWN_TYPE;
 static int asm_if(TNODE *node, name_table *table, FILE *file)
 {
 	VISIT(LEFT);
+
 	PRINT("\tpush 0\n");
 	PRINT("\tjne if_t%p:\n", node);
 
@@ -174,14 +190,16 @@ static int asm_define(TNODE *node, name_table *table, FILE *file)
 
 static int asm_call(TNODE *node, name_table *table, FILE *file)
 {
-	switch (std_func_check(LEFT)) {	
+	int func_t = std_func_check(LEFT);
+	switch (func_t) {	
 	case STD_SCAN:
 		PRINT("\t%s\n", getStdfName(STD_SCAN));	
 		PRINT("\tpop [bx+%d]\n", TableFind(table, RIGHT->right));
 		break;
 	case STD_PRINT:
+	case STD_SHOW:
 		VISIT(RIGHT);
-		PRINT("\t%s\n", getStdfName(STD_PRINT));
+		PRINT("\t%s\n", getStdfName(func_t));
 		break;
 	default:	
 		VISIT(RIGHT);
@@ -231,12 +249,35 @@ static int asm_id(TNODE *node, name_table *table, FILE *file)
 		ERRNUM_CHECK(ERRNUM);
 
 		PRINT("\tpop [bx+%d]\n", addr);
-	} else  {
+	} else {
 		int addr = TableFind(table, node);
-		if (addr < 0)
+		if (addr < 0) {
+			fprintf(stderr, "ERROR: cant find var %.*s\n", 
+					LEN(node), ID(node));
 			return ERRNUM = TRANSL_UNINIT_VAR;
+		}
 
-		PRINT("\tpush [bx+%d]\n", addr);
+		if (LEFT) {
+			PRINT("\tpop dx\n");
+			PRINT("\tpush bx\n");
+			PRINT("\tpush dx\n");
+			PRINT("\tadd\n");
+			PRINT("\tpop bx\n");
+		}
+		if (TYPE(PARENT) == ID)	
+			PRINT("\tpush [bx+%d]\n", addr);
+		else 
+			PRINT("\t%s [bx+%d]\n", 
+					(ASM_ARG_POP == 1) ? "pop" : "push", addr);
+
+
+
+		if (LEFT) {
+			PRINT("\tpush bx\n");
+			PRINT("\tpush dx\n");
+			PRINT("\tsub\n");
+			PRINT("\tpop bx\n");
+		}
 	}
 
 	return 0;
@@ -255,6 +296,7 @@ static int std_func_check(TNODE *node)
 
 	STD_FUNC_CMP("Introduce",  STD_SCAN, 9)
 	STD_FUNC_CMP("Conclusion", STD_PRINT, 10)
+	STD_FUNC_CMP("Show",       STD_SHOW, 4)
 
 	return -1;
 }

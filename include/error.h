@@ -133,7 +133,8 @@ enum lang_errs {
 	NTABLE_BAD_NODE      = 507,
 	NTABLE_OVERFLOW      = 508,
 	NTABLE_REDEFINE_ERR  = 509,
-	TRANSL_UNINIT_VAR    = 510
+	TRANSL_UNINIT_VAR    = 510,
+	TRANSL_DOUBLE_INIT   = 511
 };
 /*
  * Returns a pointer to the textual description of the code errtype.

@@ -67,7 +67,8 @@ const char *getTermName(int type)
 		"decision",
 		"while",
 		"if",
-		"else"
+		"else",
+		"init"
 	};
 
 	switch (type) {
@@ -91,6 +92,8 @@ const char *getTermName(int type)
 		return term_names[8];
 	case ELSE:
 		return term_names[9];
+	case ARR_INIT:
+		return term_names[10];
 	default:
 		ERRNUM = LANG_UNKNOWN_TYPE;
 		return NULL;	
@@ -99,12 +102,13 @@ const char *getTermName(int type)
 
 const char *getStdfName(int type)
 {
-	if (type < 0 || type >= 2)
+	if (type < 0 || type >= 3)
 		return NULL;
 
 	const char *std_names[] = {
 		"in",
-		"out"
+		"out",
+		"display"
 	};
 
 	return std_names[type];

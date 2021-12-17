@@ -7,7 +7,7 @@ static void connect(TNODE *parent, TNODE *lchild, TNODE *rchild);
 
 static int isTerminalChar(char symb);
 static int isOP(char symb);
-static int isTerm(node_data ndata);
+static int isKeyword(node_data ndata);
 static int isRelop(char symb);
 
 static node_data tokenize_op(textBuff *btext);
@@ -27,8 +27,8 @@ int LangProcces(char *namein)
 	char *src_str = NULL;
 	
 	do {
-		dump_file = fopen("lang_dump.txt", "w");
-		CHECK_(dump_file == NULL, FOPEN_ERR);
+//		dump_file = fopen("lang_dump.txt", "w");
+//		CHECK_(dump_file == NULL, FOPEN_ERR);
 
 		init("check.txt", &btext);
 		CHECK_BREAK(ERRNUM);
@@ -137,13 +137,11 @@ $		if (isspace(*(btext->buff))) {
 		
 		if (token_arr->size >= MAX_TOKEN_CNT) {
 			ERRNUM = LANG_BUFFER_OVERFLOW;
-			goto err_free_buffer;
+			break;
 		}
 
 		TreeCtor((token_arr->data + token_arr->size++), node_val);
 	}
-
-err_free_buffer:
 	
 	return ERRNUM;
 }
@@ -178,7 +176,7 @@ $	node_data tmp_data = {};
 	
 	tmp_data.len  = it;
 	
-	int type = isTerm(tmp_data);	
+	int type = isKeyword(tmp_data);	
 	if (type)
 		tmp_data.data_type = type;
 	else 
@@ -251,7 +249,7 @@ $	return (symb == OP_ADD || symb == OP_MUL || symb == OP_DIV ||
 static int isTerminalChar(char symb)
 {
 	return (symb == '(' || symb == ')' || symb == '{' || symb == '}' 
-			|| symb == ';' || symb == '$');
+			|| symb == ';' || symb == '$' || symb == '[' || symb == ']');
 }
 
 static int isRelop(char symb)
@@ -266,8 +264,8 @@ static int isRelop(char symb)
 		return type;					\
 	} else
 
-		
-static int isTerm(node_data ndata) 
+// Keyword		
+static int isKeyword(node_data ndata) 
 {
 	int size = 0;
 
@@ -284,6 +282,10 @@ static int isTerm(node_data ndata)
 	TERM_CMP("perfomed",   PERF)
 	TERM_CMP("expression", EXPR)
 	TERM_CMP("therefore",  THEREF)
+	TERM_CMP("Select",     SELECT)
+	TERM_CMP("set",        SET)
+	TERM_CMP("of",         OF)
+	TERM_CMP("elements",   ELEM)
 
 	return 0;
 }
@@ -374,6 +376,28 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 		}
 	case WHILE:
 		return process_while(token_arr);
+	case SELECT:
+		{ // TODO in func
+			RequireT(SELECT);
+			RequireT(SET);
+
+			TNODE *arr = GetId();
+
+			RequireT(OF);
+
+			TNODE *size = GetN();
+
+			RequireT(ELEM);
+			Require(';');
+
+
+			CREATE_TYPE_TOKEN(init, ARR_INIT);
+
+			connect(init, arr, NULL);
+			connect(arr, size, NULL);
+
+			return init;
+		}
 	default:
 		TNODE *node = GetE();
 		Require(';');
@@ -397,7 +421,7 @@ static TNODE *process_id(parsed_arr *token_arr)
 
 	IT--;
 
-	TNODE *id = GetId();
+	TNODE *id = GetArr();//GetId();
 	
 	if (!SYMB_MATCH(OPER, OP_ASG))
 		SyntaxError();
@@ -632,7 +656,7 @@ TNODE *_GetP(parsed_arr *token_arr)
 			return GetCallF();
 		}
 		IT--;
-		return GetId();
+		return GetArr();
 	}
 }
 
@@ -645,6 +669,21 @@ TNODE *_GetN(parsed_arr *token_arr)
 	} else {
 		SyntaxError();
 	}
+}
+
+TNODE *_GetArr(parsed_arr *token_arr)
+{
+	TNODE *id = GetId();
+
+	if (ID_MATCH('[')) {
+		Require('[');
+		TNODE *addr = GetRel();
+		Require(']');
+
+		connect(id, addr, NULL);
+	}
+
+	return id;
 }
 
 TNODE *_GetId(parsed_arr *token_arr)

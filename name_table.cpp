@@ -25,23 +25,24 @@ int TableCtor(name_table *table)
 	return 0;
 }
 
-int TableInsert(name_table *table, TNODE *token, int addr)
+int TableInsert(name_table *table, TNODE *token, int size)
 {
 	CHECK_(!table, 				NTABLE_BAD_NODE);
 	CHECK_(!table->data, 			NTABLE_BAD_NODE);
 	CHECK_(table->size >= MAX_TABLE_SIZE, 	NTABLE_OVERFLOW);
 	CHECK_(token == NULL,			TREE_NULL_NODE);
 
-	if (addr < 0)
-		addr = table->size;
+	printf("\n\nADDING NEW VAR: %.*s\n\n", LEN(token), ID(token));
 // SLOW SLOW SLOW SLOW!
 	if (TableFind(table, token) >= 0)
 		return ERRNUM = NTABLE_REDEFINE_ERR;
 
-	//printf("---inserting %.*s---\n", LEN(token), ID(token));
+	int addr = table->curr_addr;
+
 	uint32_t srch = djb_hash(ID(token), LEN(token));
 	table_node new_name = {srch, TYPE(token), addr};
-
+	
+	table->curr_addr += size;
 	table->data[table->size++] = new_name;
 
 	return addr;

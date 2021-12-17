@@ -90,7 +90,8 @@ const char *errmsg(int errt)
 		"Language bad node for name table error!",
 		"Language name table overflow",
 		"Language redefenition error!",
-		"Language uninitialized variavle!"
+		"Language uninitialized variavle!",
+		"Language double init error!"
 	};
 
 	switch (errt/100) {
