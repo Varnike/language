@@ -1,4 +1,5 @@
 #include "backend.h"
+#include "X86-64/backend64.h"
 
 static int asm_if(TNODE *node, name_table *table, FILE *file);
 static int asm_define(TNODE *node, name_table *table, FILE *file);
@@ -15,6 +16,9 @@ int LangTranslate(TNODE *root, const char *name_out)
 {
 	CHECK_(!name_out, LANG_NULL_FILENAME);
 	TREE_CHECK(root, ERRNUM);
+
+	//lang64_compile(root, name_out);
+	return 0;
 
 	FILE *file_out = fopen(name_out, "w");
 	CHECK_(!file_out, FOPEN_ERR);
@@ -75,7 +79,8 @@ int trav_translate(TNODE *node, name_table *table, FILE *file)
 				ASM_ARG_POP = 0;
 			} else { 
 				PRINT("\tpop [bx+%d]\n", 
-				(addr >= 0) ? addr : TableInsert(table, LEFT));
+				(addr >= 0) ? addr : TableInsert(table,
+				       	LEFT));
 			}
 
 			return 0;

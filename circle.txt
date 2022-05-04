@@ -1,0 +1,41 @@
+#Select set x of 100 elements;
+
+Select set vram of 400 elements;
+
+Theorem (pow)
+Given (x y)
+Proof
+        suppose (y == 0) perfomed
+        therefore proven 1;
+
+        mulx = x;
+        Consider {
+                x = x * mulx; 
+                y = y - 1;
+        } assuming expression (y >= 2) perfomed;
+        proven x;
+QED
+
+width = 20;
+len = 20;
+rad = 8;
+
+y = 1;
+x = 0;
+
+
+Consider {
+	x = 0;
+	Consider {
+		suppose (pow(x - 10 2) + pow(y - 10 2) < pow(rad 2)) perfomed
+		therefore {
+			z = x + y * len;
+			vram[z] = 1;
+		}
+		x = x + 1;
+	} assuming expression (x < 20) perfomed; 
+	y = y + 1;
+} assuming expression (y < 20) perfomed;
+
+Show(0 20 20);
+$

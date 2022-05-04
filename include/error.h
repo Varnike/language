@@ -134,7 +134,10 @@ enum lang_errs {
 	NTABLE_OVERFLOW      = 508,
 	NTABLE_REDEFINE_ERR  = 509,
 	TRANSL_UNINIT_VAR    = 510,
-	TRANSL_DOUBLE_INIT   = 511
+	TRANSL_DOUBLE_INIT   = 511,
+	COMP_NULLPTR_ERR     = 512,
+	COMP_NULL_BUFF       = 513,
+	COMP_BAD_DATA        = 514
 };
 /*
  * Returns a pointer to the textual description of the code errtype.

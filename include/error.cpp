@@ -91,7 +91,10 @@ const char *errmsg(int errt)
 		"Language name table overflow",
 		"Language redefenition error!",
 		"Language uninitialized variavle!",
-		"Language double init error!"
+		"Language double init error!",
+		"Compiler nullptr pointer error!",
+		"Compiler nullptr buffer error!",
+		"Compiler bad data in programm buffer!"
 	};
 
 	switch (errt/100) {

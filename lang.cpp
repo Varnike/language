@@ -30,7 +30,9 @@ int LangProcces(char *namein)
 //		dump_file = fopen("lang_dump.txt", "w");
 //		CHECK_(dump_file == NULL, FOPEN_ERR);
 
-		init("check.txt", &btext);
+		//init("check.txt", &btext);
+
+		init(namein, &btext);
 		CHECK_BREAK(ERRNUM);
 
 		src_str = btext.buff;
@@ -50,7 +52,8 @@ int LangProcces(char *namein)
 
 		TreeDump(root);
 		
-		LangTranslate(root, "asm.txt");
+		//LangTranslate(root, "asm.txt");
+		lang64_compile(root, "out");
 
 		TreeDtor(root);	
 	} while(0);

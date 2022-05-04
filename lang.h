@@ -10,6 +10,7 @@
 #include "include/onegin.h"
 #include "name_table.h"
 #include "backend.h"
+#include "X86-64/backend64.h"
 
 #define  $ 				fprintf(dump_file,		\
 			"< %s >\t%d\n", __func__,__LINE__);

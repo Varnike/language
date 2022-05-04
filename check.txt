@@ -1,6 +1,10 @@
-#Select set x of 100 elements;
-
-Select set vram of 400 elements;
+Theorem (Factorial)
+Given (x)
+Proof
+        suppose (x <= 1) perfomed 
+        therefore proven 1;
+        proven x * Factorial(x - 1); 
+QED
 
 Theorem (pow)
 Given (x y)
@@ -16,26 +20,33 @@ Proof
         proven x;
 QED
 
-width = 20;
-len = 20;
-rad = 8;
+Theorem (sin)
+Given (x)
+Proof
+        result   = 0;
+        currTerm = 0;
+        minus    = 0;
 
-y = 1;
-x = 0;
+        Consider {
+                currVal = pow(x currTerm * 2 + 1);
+                Conclusion(currVal);
+                currVal = currVal / Factorial(2 * currTerm + 1);
+                suppose (minus == 1) perfomed
+                therefore {
+                        result = result - currVal;
+                        minus = 0;
+                } however {
+                        result = result + currVal;      
+                        minus = 1;
+                }
+                currTerm = currTerm + 1;
+        } assuming expression (currTerm <= 10) perfomed;
+        proven result;
+QED
 
-
-Consider {
-	x = 0;
-	Consider {
-		suppose (pow(x - 10 2) + pow(y - 10 2) < pow(rad 2)) perfomed
-		therefore {
-			z = x + y * len;
-			vram[z] = 1;
-		}
-		x = x + 1;
-	} assuming expression (x < 20) perfomed; 
-	y = y + 1;
-} assuming expression (y < 20) perfomed;
-
-Show(0 20 20);
+y = 0;
+Introduce(y);
+y = sin(y);   
+              
+Conclusion(y);
 $
