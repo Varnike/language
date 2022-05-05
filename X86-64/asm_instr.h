@@ -38,6 +38,7 @@ const unsigned char mov_ac[] = {0x48, 0x89, 0xc8};
 const unsigned char mov_ca[] = {0x48, 0x89, 0xc1};
 const unsigned char mov_bc[] = {0x48, 0x89, 0xcb};
 const unsigned char mov_cb[] = {0x48, 0x89, 0xd9};
+const unsigned char mov_bpsp[] = {0x48, 0x89, 0xe5};
 
 const unsigned char movabs_rax[] = {0x48, 0xb8};
 const unsigned char movabs_rbx[] = {0x48, 0xbb};
@@ -46,12 +47,15 @@ const unsigned char movabs_rcx[] = {0x48, 0xb9};
 /*	xor					*/
 const unsigned char xor_rdx[]  = {0x48, 0x31, 0xd2};
 
-/*	push instructions			*/
-const unsigned char push_rax[] = {0x50};
-const unsigned char push_rbx[] = {0x53};
-const unsigned char pop_rax[]  = {0x58};
-const unsigned char pop_rbx[]  = {0x5b};
-const unsigned char push[]     = {0x68};
+/*	push/pop instructions			*/
+const unsigned char push_rax[]    = {0x50};
+const unsigned char push_rbx[]    = {0x53};
+const unsigned char push_rbp[]	  = {0x55};
+const unsigned char pop_rax[]     = {0x58};
+const unsigned char pop_rbx[]     = {0x5b};
+const unsigned char pop_rbp[]	  = {0x5d};
+const unsigned char push[]        = {0x68};
+const unsigned char pop_mem_rbp[] = {0x8f, 0x85};
 
 /*	arithmetics instructions		*/
 const unsigned char add_rax_rbx[]   = {0x48, 0x01, 0xd8};

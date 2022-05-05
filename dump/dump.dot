@@ -1,86 +1,74 @@
 digraph dump_graph {
 	rankdir=TV; 
-node0x55732bbc3cd0 [shape=plaintext
+node0x55622f58bbc0 [shape=plaintext
 					label=<<table border='1' cellborder='1'>
 			<tr><td colspan="2" bgcolor="pink" > statement</td></tr>
-					<tr><td port= "lchild">L:(nil)</td><td port="rchild">R: 0x55732bbc3850</td></tr>
+					<tr><td port= "lchild">L:(nil)</td><td port="rchild">R: 0x55622f58ba40</td></tr>
 				</table>>];
-		node0x55732bbc3cd0:rchild -> node0x55732bbc3850[style=bold, arrowhead=vee];
-node0x55732bbc3810 [shape=plaintext
+		node0x55622f58bbc0:rchild -> node0x55622f58ba40[style=bold, arrowhead=vee];
+node0x55622f58ba00 [shape=plaintext
 					label=<<table border='1' cellborder='1'>
-			<tr><td colspan="2" bgcolor="orchid" > a</td></tr>
+			<tr><td colspan="2" bgcolor="orchid" > c</td></tr>
 					<tr><td port= "lchild">L:(nil)</td><td port="rchild">R: (nil)</td></tr>
 				</table>>];
-node0x55732bbc3850 [shape=plaintext
+node0x55622f58ba40 [shape=plaintext
 					label=<<table border='1' cellborder='1'>
 			<tr><td colspan="2" bgcolor="olivedrab3" > =</td></tr>
-					<tr><td port= "lchild">L:0x55732bbc3810</td><td port="rchild">R: 0x55732bbc3bd0</td></tr>
+					<tr><td port= "lchild">L:0x55622f58ba00</td><td port="rchild">R: 0x55622f58ba80</td></tr>
 				</table>>];
-		node0x55732bbc3850:lchild -> node0x55732bbc3810[style=bold, arrowhead=vee];
-		node0x55732bbc3850:rchild -> node0x55732bbc3bd0[style=bold, arrowhead=vee];
-node0x55732bbc38d0 [shape=plaintext
-					label=<<table border='1' cellborder='1'>
-			<tr><td colspan="2" bgcolor="lightskyblue" >10</td></tr>
-					<tr><td port= "lchild">L:(nil)</td><td port="rchild">R: (nil)</td></tr>
-				</table>>];
-node0x55732bbc3910 [shape=plaintext
-					label=<<table border='1' cellborder='1'>
-			<tr><td colspan="2" bgcolor="olivedrab3" > +</td></tr>
-					<tr><td port= "lchild">L:0x55732bbc38d0</td><td port="rchild">R: 0x55732bbc3950</td></tr>
-				</table>>];
-		node0x55732bbc3910:lchild -> node0x55732bbc38d0[style=bold, arrowhead=vee];
-		node0x55732bbc3910:rchild -> node0x55732bbc3950[style=bold, arrowhead=vee];
-node0x55732bbc3950 [shape=plaintext
-					label=<<table border='1' cellborder='1'>
-			<tr><td colspan="2" bgcolor="lightskyblue" >10</td></tr>
-					<tr><td port= "lchild">L:(nil)</td><td port="rchild">R: (nil)</td></tr>
-				</table>>];
-node0x55732bbc39d0 [shape=plaintext
-					label=<<table border='1' cellborder='1'>
-			<tr><td colspan="2" bgcolor="olivedrab3" > /</td></tr>
-					<tr><td port= "lchild">L:0x55732bbc3910</td><td port="rchild">R: 0x55732bbc3a90</td></tr>
-				</table>>];
-		node0x55732bbc39d0:lchild -> node0x55732bbc3910[style=bold, arrowhead=vee];
-		node0x55732bbc39d0:rchild -> node0x55732bbc3a90[style=bold, arrowhead=vee];
-node0x55732bbc3a50 [shape=plaintext
-					label=<<table border='1' cellborder='1'>
-			<tr><td colspan="2" bgcolor="lightskyblue" >2</td></tr>
-					<tr><td port= "lchild">L:(nil)</td><td port="rchild">R: (nil)</td></tr>
-				</table>>];
-node0x55732bbc3a90 [shape=plaintext
-					label=<<table border='1' cellborder='1'>
-			<tr><td colspan="2" bgcolor="olivedrab3" > +</td></tr>
-					<tr><td port= "lchild">L:0x55732bbc3a50</td><td port="rchild">R: 0x55732bbc3ad0</td></tr>
-				</table>>];
-		node0x55732bbc3a90:lchild -> node0x55732bbc3a50[style=bold, arrowhead=vee];
-		node0x55732bbc3a90:rchild -> node0x55732bbc3ad0[style=bold, arrowhead=vee];
-node0x55732bbc3ad0 [shape=plaintext
-					label=<<table border='1' cellborder='1'>
-			<tr><td colspan="2" bgcolor="lightskyblue" >2</td></tr>
-					<tr><td port= "lchild">L:(nil)</td><td port="rchild">R: (nil)</td></tr>
-				</table>>];
-node0x55732bbc3b50 [shape=plaintext
-					label=<<table border='1' cellborder='1'>
-			<tr><td colspan="2" bgcolor="olivedrab3" > *</td></tr>
-					<tr><td port= "lchild">L:0x55732bbc39d0</td><td port="rchild">R: 0x55732bbc3b90</td></tr>
-				</table>>];
-		node0x55732bbc3b50:lchild -> node0x55732bbc39d0[style=bold, arrowhead=vee];
-		node0x55732bbc3b50:rchild -> node0x55732bbc3b90[style=bold, arrowhead=vee];
-node0x55732bbc3b90 [shape=plaintext
+		node0x55622f58ba40:lchild -> node0x55622f58ba00[style=bold, arrowhead=vee];
+		node0x55622f58ba40:rchild -> node0x55622f58ba80[style=bold, arrowhead=vee];
+node0x55622f58ba80 [shape=plaintext
 					label=<<table border='1' cellborder='1'>
 			<tr><td colspan="2" bgcolor="lightskyblue" >3</td></tr>
 					<tr><td port= "lchild">L:(nil)</td><td port="rchild">R: (nil)</td></tr>
 				</table>>];
-node0x55732bbc3bd0 [shape=plaintext
+node0x55622f58bb80 [shape=plaintext
 					label=<<table border='1' cellborder='1'>
-			<tr><td colspan="2" bgcolor="olivedrab3" > /</td></tr>
-					<tr><td port= "lchild">L:0x55732bbc3b50</td><td port="rchild">R: 0x55732bbc3c10</td></tr>
+			<tr><td colspan="2" bgcolor="pink" > statement</td></tr>
+					<tr><td port= "lchild">L:0x55622f58bbc0</td><td port="rchild">R: 0x55622f58b940</td></tr>
 				</table>>];
-		node0x55732bbc3bd0:lchild -> node0x55732bbc3b50[style=bold, arrowhead=vee];
-		node0x55732bbc3bd0:rchild -> node0x55732bbc3c10[style=bold, arrowhead=vee];
-node0x55732bbc3c10 [shape=plaintext
+		node0x55622f58bb80:lchild -> node0x55622f58bbc0[style=bold, arrowhead=vee];
+		node0x55622f58bb80:rchild -> node0x55622f58b940[style=bold, arrowhead=vee];
+node0x55622f58b900 [shape=plaintext
 					label=<<table border='1' cellborder='1'>
-			<tr><td colspan="2" bgcolor="lightskyblue" >15</td></tr>
+			<tr><td colspan="2" bgcolor="orchid" > b</td></tr>
+					<tr><td port= "lchild">L:(nil)</td><td port="rchild">R: (nil)</td></tr>
+				</table>>];
+node0x55622f58b940 [shape=plaintext
+					label=<<table border='1' cellborder='1'>
+			<tr><td colspan="2" bgcolor="olivedrab3" > =</td></tr>
+					<tr><td port= "lchild">L:0x55622f58b900</td><td port="rchild">R: 0x55622f58b980</td></tr>
+				</table>>];
+		node0x55622f58b940:lchild -> node0x55622f58b900[style=bold, arrowhead=vee];
+		node0x55622f58b940:rchild -> node0x55622f58b980[style=bold, arrowhead=vee];
+node0x55622f58b980 [shape=plaintext
+					label=<<table border='1' cellborder='1'>
+			<tr><td colspan="2" bgcolor="lightskyblue" >2</td></tr>
+					<tr><td port= "lchild">L:(nil)</td><td port="rchild">R: (nil)</td></tr>
+				</table>>];
+node0x55622f58bb40 [shape=plaintext
+					label=<<table border='1' cellborder='1'>
+			<tr><td colspan="2" bgcolor="pink" > statement</td></tr>
+					<tr><td port= "lchild">L:0x55622f58bb80</td><td port="rchild">R: 0x55622f58b840</td></tr>
+				</table>>];
+		node0x55622f58bb40:lchild -> node0x55622f58bb80[style=bold, arrowhead=vee];
+		node0x55622f58bb40:rchild -> node0x55622f58b840[style=bold, arrowhead=vee];
+node0x55622f58b800 [shape=plaintext
+					label=<<table border='1' cellborder='1'>
+			<tr><td colspan="2" bgcolor="orchid" > a</td></tr>
+					<tr><td port= "lchild">L:(nil)</td><td port="rchild">R: (nil)</td></tr>
+				</table>>];
+node0x55622f58b840 [shape=plaintext
+					label=<<table border='1' cellborder='1'>
+			<tr><td colspan="2" bgcolor="olivedrab3" > =</td></tr>
+					<tr><td port= "lchild">L:0x55622f58b800</td><td port="rchild">R: 0x55622f58b880</td></tr>
+				</table>>];
+		node0x55622f58b840:lchild -> node0x55622f58b800[style=bold, arrowhead=vee];
+		node0x55622f58b840:rchild -> node0x55622f58b880[style=bold, arrowhead=vee];
+node0x55622f58b880 [shape=plaintext
+					label=<<table border='1' cellborder='1'>
+			<tr><td colspan="2" bgcolor="lightskyblue" >1</td></tr>
 					<tr><td port= "lchild">L:(nil)</td><td port="rchild">R: (nil)</td></tr>
 				</table>>];
 }

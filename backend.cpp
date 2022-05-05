@@ -17,7 +17,7 @@ int LangTranslate(TNODE *root, const char *name_out)
 	CHECK_(!name_out, LANG_NULL_FILENAME);
 	TREE_CHECK(root, ERRNUM);
 
-	//lang64_compile(root, name_out);
+	lang64_compile(root, name_out);
 	return 0;
 
 	FILE *file_out = fopen(name_out, "w");
@@ -119,7 +119,6 @@ int trav_translate(TNODE *node, name_table *table, FILE *file)
 	VISIT(LEFT);
 	VISIT(RIGHT);
 /////
-
 	switch (TYPE(node)) {
 	case OPER:
 		PRINT("\t%s\n", getAsmOper(STR(node)));

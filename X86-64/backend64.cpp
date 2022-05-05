@@ -18,6 +18,8 @@ void test(comp_data *cdata)
 			ARRAY_SIZE(mov_ab), ARRAY_SIZE(exit0));
 	$$
 	WRITE_IM(PROGRAMM_ALIGN, uint64_t);
+	WRITE_OP(push_rbp);
+	WRITE_OP(mov_bpsp);
 /*	$$
 	WRITE_OP(movabs_rax);
 	WRITE_IM(1488, uint64_t);
@@ -31,6 +33,7 @@ void test(comp_data *cdata)
 
 inline void program_exit0(comp_data *cdata)
 {
+	WRITE_OP(pop_rbp);
 	WRITE_OP(exit0);
 }
 
@@ -107,7 +110,6 @@ static int write_programm(comp_data *cdata, const char *pr_name)
 int trav_compile
 	(TNODE *node, name_table *table, FILE *file, comp_data *cdata)
 {
-	$
 	if (ERRNUM)
 		return ERRNUM;
 
@@ -119,9 +121,19 @@ int trav_compile
 		return 0;
 	case OPER:
 		if (STR(node) == OP_ASG) {
-			//VISIT(RIGHT);
-			trav_oper_node(RIGHT, table, file, cdata);
+			//TODO optimization
+			VISIT(RIGHT);
+
+			int addr = TableFind(table, LEFT);
+			if (addr < 0)
+				addr = TableInsert(table, LEFT);
+			
+			addr *= -8;
+			WRITE_OP(pop_mem_rbp);
+			WRITE_IM(addr, int32_t);
 			return 0;
+		} else {
+			trav_oper_node(node, table, file, cdata);
 		}
 		break;
 	}
@@ -132,17 +144,7 @@ int trav_compile
 /////////////////////////////////////////////////
 	
 	switch (TYPE(node)) {
-	case OPER:
-		WRITE_OP(pop_rax);
-		WRITE_OP(pop_rbx);
-
-		//TODO get asm oper analog
-		if (STR(node) == '+')
-			WRITE_OP(add_rax_rbx);
-		else 
-			WRITE_OP(sub_rax_rbx);
-
-		WRITE_OP(push_rax);
+	case OPER:	
 		break;
 	case CONST:
 		WRITE_OP(push);

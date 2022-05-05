@@ -19,7 +19,7 @@ struct table_node {
 struct name_table {
 	table_node *data;
 	int size;
-	int curr_addr;
+	int curr_addr = 8;
 };
 
 int TableCtor(name_table *table);
