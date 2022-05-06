@@ -4,38 +4,48 @@
 static int update_hdr(comp_data *cdata);
 static int write_programm(comp_data *cdata, const char *pr_name);
 static int set_ex_headers(comp_data *cdata);
+static int func_epilog(comp_data *cdata, name_table *table);
+static int func_prolog(comp_data *cdata);
+static int set_label_src(comp_data *cdata);
+static int upd_label_src(comp_data *cdata);
+
 static int trav_oper_node
-	(TNODE *node, name_table *table, FILE *file, comp_data *cdata);
+	(TNODE *node, name_table *table,  comp_data *cdata);
+static int trav_relop_node
+	(TNODE *node, name_table *table,  comp_data *cdata);
+static int set_cmp_cond
+	(TNODE *node, name_table *table,  comp_data *cdata);
+static int trav_if_node
+	(TNODE *node, name_table *table,  comp_data *cdata);
+
 
 /** To determine whether it is necessary
  *  to push or pop args(if it is function params)
  */
 int X64_ARG_POP = 0;
 
-void test(comp_data *cdata)
+
+int test(comp_data *cdata)
 {
 	printf("sizes: %d, %d\n", 
-			ARRAY_SIZE(mov_ab), ARRAY_SIZE(exit0));
-	$$
+			ARRAY_SIZE(mov_rax_rbx), ARRAY_SIZE(exit0));
 	WRITE_IM(PROGRAMM_ALIGN, uint64_t);
-	WRITE_OP(push_rbp);
-	WRITE_OP(mov_bpsp);
-/*	$$
-	WRITE_OP(movabs_rax);
-	WRITE_IM(1488, uint64_t);
-	WRITE_OP(mov_ab);
-	WRITE_OP(mov_ac);
 	$$
-	WRITE_OP(exit0);
-	$$
-*/
+	WRITE_OP(jne);
+	WRITE_IM(0, int32_t);
+	return func_prolog(cdata);
 }
 
-inline void program_exit0(comp_data *cdata)
+
+inline void program_exit0(comp_data *cdata, name_table *table)
 {
+	*(int32_t *)&cdata->buff[table->rsp_pos] = table->size * 8;
+	WRITE_OP(add_rsp);
+	WRITE_IM(table->size * 8, int32_t);
 	WRITE_OP(pop_rbp);
 	WRITE_OP(exit0);
 }
+
 
 int lang64_compile(TNODE *root, const char *name_out)
 {
@@ -44,18 +54,19 @@ int lang64_compile(TNODE *root, const char *name_out)
 		calloc(COMP_BUFF_SIZE, sizeof(char));
 	CHECK_(!cdata.buff, CALLOC_ERR);
 
-	set_ex_headers(&cdata);
-	test(&cdata);
-
-	FILE *file_out = fopen(name_out, "w");
-	CHECK_(!file_out, FOPEN_ERR);
-
 	name_table table = {};
 	TableCtor(&table);
 	ERRNUM_CHECK(ERRNUM);
 
-	trav_compile(root, &table, NULL, &cdata);
-	program_exit0(&cdata);
+	set_ex_headers(&cdata);
+
+	FILE *file_out = fopen(name_out, "w");
+	CHECK_(!file_out, FOPEN_ERR);
+
+
+	table.rsp_pos = test(&cdata);
+	trav_compile(root, &table, &cdata);
+	program_exit0(&cdata, &table);
 	
 
 	update_hdr(&cdata);
@@ -78,6 +89,7 @@ static int set_ex_headers(comp_data *cdata)
 	return 0;
 }
 
+
 static int update_hdr(comp_data *cdata)
 {
 	CHECK_(!cdata, COMP_NULLPTR_ERR);
@@ -95,6 +107,7 @@ static int update_hdr(comp_data *cdata)
 	return 0;
 }
 
+
 static int write_programm(comp_data *cdata, const char *pr_name)
 {
 	CHECK_(!cdata, COMP_NULLPTR_ERR);
@@ -107,13 +120,48 @@ static int write_programm(comp_data *cdata, const char *pr_name)
 	fclose(out);
 }
 
+
+static int func_epilog(comp_data *cdata, name_table *table)
+{
+	CHECK_(!cdata, COMP_NULLPTR_ERR);
+	CHECK_(!cdata->buff, COMP_NULL_BUFF);
+	CHECK_(!table, COMP_NULLPTR_ERR);
+
+
+	*(int32_t *)&cdata->buff[table->rsp_pos] = table->size * 8;
+	WRITE_OP(add_rsp);
+	WRITE_IM(table->size * 8, int32_t);
+	WRITE_OP(pop_rbp);
+
+	return 0;
+}
+
+
+static int func_prolog(comp_data *cdata)
+{
+	CHECK_(!cdata, COMP_NULLPTR_ERR);
+	CHECK_(!cdata->buff, COMP_NULL_BUFF);
+
+	WRITE_OP(push_rbp);
+	WRITE_OP(mov_rbp_rsp);
+	WRITE_OP(sub_rsp);
+
+	int rsp_pos = cdata->ip;
+	WRITE_IM(0x1488, int32_t);
+
+	return rsp_pos;
+}
+
+
 int trav_compile
-	(TNODE *node, name_table *table, FILE *file, comp_data *cdata)
+	(TNODE *node, name_table *table,  comp_data *cdata)
 {
 	if (ERRNUM)
 		return ERRNUM;
 
 	switch (TYPE(node)) {
+	case RELOP:
+		return trav_relop_node(node, table,  cdata);
 	case STMT:
 		VISIT(RIGHT);
 		VISIT(LEFT);
@@ -129,15 +177,17 @@ int trav_compile
 				addr = TableInsert(table, LEFT);
 			
 			addr *= -8;
-			WRITE_OP(pop_mem_rbp);
+			//printf("\tT__ %d __T\n", addr);
+			WRITE_OP(mov_mrbp_rax);
 			WRITE_IM(addr, int32_t);
 			return 0;
 		} else {
-			trav_oper_node(node, table, file, cdata);
+			trav_oper_node(node, table,  cdata);
+			return 0;
 		}
 		break;
 	}
-	$
+	
 /////////////////////////////////////////////////
 	VISIT(LEFT);
 	VISIT(RIGHT);
@@ -147,36 +197,40 @@ int trav_compile
 	case OPER:	
 		break;
 	case CONST:
-		WRITE_OP(push);
-		WRITE_IM(NUM(node), uint32_t);
+		WRITE_OP(movabs_rax);
+		WRITE_IM(NUM(node), int64_t);
+		break;
+	case ID:
+		{
+		int addr = TableFind(table, node);
+		if (addr < 0) {
+			fprintf(stderr, "ERROR: cant find var %.*s\n", 
+					LEN(node), ID(node));
+			return ERRNUM = TRANSL_UNINIT_VAR;
+		}
+
+		WRITE_OP(mov_rax_mrbp);
+		WRITE_IM(addr * (-8), int32_t);	// TODO in const
+						//
+		}
+		break;
+	default:
 		break;
 	}
 }
 
 int trav_oper_node
-	(TNODE *node, name_table *table, FILE *file, comp_data *cdata)
+	(TNODE *node, name_table *table,  comp_data *cdata)
 {
-	if (LEFT)
-		trav_oper_node(LEFT, table, file, cdata);
-	if (RIGHT)	
-		trav_oper_node(RIGHT, table, file, cdata);
+	VISIT(LEFT);
+	WRITE_OP(push_rax);
+
+	VISIT(RIGHT);
+	WRITE_OP(mov_rbx_rax);
+	WRITE_OP(pop_rax);
 
 	switch (TYPE(node)) {
 	case OPER:
-		if (TYPE(RIGHT) == CONST) {
-			WRITE_OP(movabs_rbx);
-			WRITE_IM(NUM(RIGHT), uint64_t);
-		} else {
-			WRITE_OP(pop_rbx);
-		}
-
-		if (TYPE(LEFT) == CONST) {
-			WRITE_OP(movabs_rax);
-			WRITE_IM(NUM(LEFT), uint64_t);
-		} else {
-			WRITE_OP(pop_rax);
-		}
-
 		switch (STR(node)) {
 		case OP_ADD:
 			WRITE_OP(add_rax_rbx);
@@ -201,17 +255,56 @@ int trav_oper_node
 			ERRNUM = LANG_UNKNOWN_TYPE;
 			return NULL;	
 		}
-
-		WRITE_OP(push_rax);
-		break;
-	case CONST:
-		// TODO for args
-		break;
 	}
 
 	return 0;
 }
 
+static int trav_relop_node
+	(TNODE *node, name_table *table, comp_data *cdata)
+{
+		VISIT(LEFT);
+		WRITE_OP(push_rax);
+
+		VISIT(LEFT);
+
+		WRITE_OP(mov_rbx_rax);
+		WRITE_OP(pop_rax);
+		WRITE_OP(cmp_rax_rbx);
+
+		set_cmp_cond(node, table, cdata);
+		return 0;
+}
+
+static int set_cmp_cond
+	(TNODE *node, name_table *table,  comp_data *cdata)
+{
+	WRITE_OP(movabs_rax);
+	WRITE_IM(0x0, int64_t);
+
+	switch (STR(node)) {
+	case RELOP_LT:
+		WRITE_OP(setb_al);
+		break;
+	case RELOP_LE:
+		WRITE_OP(setbe_al);
+		break;
+	case RELOP_EQ:
+		WRITE_OP(sete_al);
+		break;
+	case RELOP_NE:
+		WRITE_OP(setne_al);
+		break;
+	case RELOP_GT:
+		WRITE_OP(seta_al);
+		break;
+	case RELOP_GE:
+		WRITE_OP(setae_al);
+		break;
+	}
+
+	return 0;
+}
 #undef STD_FUNC_CMP
 #undef VISIT
 #undef LEFT

@@ -26,14 +26,15 @@
 #define LEFT				node->left
 #define RIGHT				node->right
 #define PARENT				node->parent
-#define VISIT(node)			if (node) trav_compile(node, table, file, cdata);
+#define VISIT(node)			if (node) trav_compile(node, table, cdata);
 #define VISIT_NEW_TABLE(node, newt)	if (node) 		\
-						trav_compile(node, newt, file, cdata);
+						trav_compile(node, newt, cdata);
 #define PRINT(...)			fprintf(file, __VA_ARGS__)
 
 const int COMP_BUFF_SIZE = 2048;
+const int UNSET_LABEL = 0xFFFFFFFF;
 
-typedef struct COMPILE_DATA{
+typedef struct COMPILE_DATA {
 	unsigned char *buff = NULL;
 	uint64_t ip = 0;		// current instruction pointer
 	int size = COMP_BUFF_SIZE;
@@ -41,7 +42,7 @@ typedef struct COMPILE_DATA{
 
 int lang64_compile(TNODE *root, const char *name_out);
 int trav_compile
-	(TNODE *node, name_table *table, FILE *file, comp_data *cdata);
+	(TNODE *node, name_table *table, comp_data *cdata);
 
 
 #endif // BACKEND64_H
