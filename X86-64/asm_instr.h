@@ -70,7 +70,8 @@ const unsigned char add_rsp[]	    = {0x48, 0x81, 0xc4};
 const unsigned char and_rax[]	    = {0x48, 0x25};
 
 /*	cmp instructions			*/
-const unsigned char cmp_rax_rbx[] = {0x48, 0x39, 0xd8};
+const unsigned char cmp_rax_rbx[]  = {0x48, 0x39, 0xd8};
+const unsigned char test_rax_rax[] = {0x48, 0x85, 0xc0};
 
 /*	set instructions			*/
 const unsigned char setb_al[]  = {0x0f, 0x92, 0xc0};

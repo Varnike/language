@@ -9,6 +9,8 @@ static int func_prolog(comp_data *cdata);
 static int set_label_src(comp_data *cdata);
 static int upd_label_src(comp_data *cdata);
 
+static int trav_while_node
+	(TNODE *node, name_table *table,  comp_data *cdata);
 static int trav_oper_node
 	(TNODE *node, name_table *table,  comp_data *cdata);
 static int trav_relop_node
@@ -31,8 +33,8 @@ int test(comp_data *cdata)
 			ARRAY_SIZE(mov_rax_rbx), ARRAY_SIZE(exit0));
 	WRITE_IM(PROGRAMM_ALIGN, uint64_t);
 	$$
-	WRITE_OP(jne);
-	WRITE_IM(0, int32_t);
+	//WRITE_OP(jne);
+	//WRITE_IM(0, int32_t);
 	return func_prolog(cdata);
 }
 
@@ -160,6 +162,10 @@ int trav_compile
 		return ERRNUM;
 
 	switch (TYPE(node)) {
+	case WHILE:
+		return trav_while_node(node, table, cdata);
+	case IF:
+		return trav_if_node(node, table, cdata);
 	case RELOP:
 		return trav_relop_node(node, table,  cdata);
 	case STMT:
@@ -177,7 +183,7 @@ int trav_compile
 				addr = TableInsert(table, LEFT);
 			
 			addr *= -8;
-			//printf("\tT__ %d __T\n", addr);
+
 			WRITE_OP(mov_mrbp_rax);
 			WRITE_IM(addr, int32_t);
 			return 0;
@@ -219,8 +225,7 @@ int trav_compile
 	}
 }
 
-int trav_oper_node
-	(TNODE *node, name_table *table,  comp_data *cdata)
+int trav_oper_node(TNODE *node, name_table *table,  comp_data *cdata)
 {
 	VISIT(LEFT);
 	WRITE_OP(push_rax);
@@ -260,13 +265,12 @@ int trav_oper_node
 	return 0;
 }
 
-static int trav_relop_node
-	(TNODE *node, name_table *table, comp_data *cdata)
+int trav_relop_node(TNODE *node, name_table *table, comp_data *cdata)
 {
 		VISIT(LEFT);
 		WRITE_OP(push_rax);
 
-		VISIT(LEFT);
+		VISIT(RIGHT);
 
 		WRITE_OP(mov_rbx_rax);
 		WRITE_OP(pop_rax);
@@ -276,8 +280,7 @@ static int trav_relop_node
 		return 0;
 }
 
-static int set_cmp_cond
-	(TNODE *node, name_table *table,  comp_data *cdata)
+int set_cmp_cond(TNODE *node, name_table *table,  comp_data *cdata)
 {
 	WRITE_OP(movabs_rax);
 	WRITE_IM(0x0, int64_t);
@@ -305,6 +308,60 @@ static int set_cmp_cond
 
 	return 0;
 }
+
+#define SET_ENTRY(name)					\
+	int name = cdata->ip;				\
+	WRITE_IM(UNSET_DST, int32_t);
+
+#define UPDATE_ENTRY(src)				\
+	*(int32_t *)&cdata->buff[src] = 		\
+			cdata->ip - src - sizeof(int32_t);
+
+#define SET_DST(dst)					\
+	int dst = cdata->ip;
+
+#define IP		cdata->ip
+int trav_if_node(TNODE *node, name_table *table,  comp_data *cdata)
+{
+	VISIT(LEFT);
+
+	WRITE_OP(test_rax_rax);
+	WRITE_OP(jne);
+	SET_ENTRY(if_dst);
+
+	VISIT(RIGHT->left);
+
+	WRITE_OP(jmp);
+	SET_ENTRY(jmp_skip);	
+	printf("!!!\t%d ***** %d ***** %d\n",
+			cdata->ip, if_dst, 2);
+	UPDATE_ENTRY(if_dst);
+
+	VISIT(RIGHT->right);
+
+	UPDATE_ENTRY(jmp_skip);
+
+	return 0;
+}
+
+int trav_while_node(TNODE *node, name_table *table,  comp_data *cdata)
+{
+	WRITE_OP(jmp);
+	SET_ENTRY(jmp_cond);
+	SET_DST(while_start);
+
+	VISIT(RIGHT);
+	
+	UPDATE_ENTRY(jmp_cond);
+
+	VISIT(LEFT);
+
+	WRITE_OP(jne);
+	WRITE_IM(while_start - IP - 4, int32_t);
+
+	return 0;
+}
+
 #undef STD_FUNC_CMP
 #undef VISIT
 #undef LEFT

@@ -1,2 +1,8 @@
-a = 14 * (1 != 1);
+a = 4;
+b = 0;
+
+Consider {
+        # do smth
+ 	b = b + 1;       
+} assuming expression (b < 5) perfomed;
 $

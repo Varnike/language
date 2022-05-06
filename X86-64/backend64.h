@@ -32,7 +32,7 @@
 #define PRINT(...)			fprintf(file, __VA_ARGS__)
 
 const int COMP_BUFF_SIZE = 2048;
-const int UNSET_LABEL = 0xFFFFFFFF;
+const int UNSET_DST = 0xFFFFFFFF;
 
 typedef struct COMPILE_DATA {
 	unsigned char *buff = NULL;
