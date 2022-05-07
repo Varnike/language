@@ -34,7 +34,7 @@ int TableInsert(name_table *table, TNODE *token, int size)
 
 	printf("\n\nADDING NEW VAR: %.*s\n\n", LEN(token), ID(token));
 // SLOW SLOW SLOW SLOW!
-	if (TableFind(table, token) >= 0)
+	if (TableFind(table, token) > 0)
 		return ERRNUM = NTABLE_REDEFINE_ERR;
 
 	int addr = table->curr_addr;
@@ -42,7 +42,8 @@ int TableInsert(name_table *table, TNODE *token, int size)
 	uint32_t srch = djb_hash(ID(token), LEN(token));
 	table_node new_name = {srch, TYPE(token), addr};
 	
-	table->curr_addr += size;
+	table->curr_addr -= size;
+	table->arg_cnt++;
 	table->data[table->size++] = new_name;
 
 	return addr;
@@ -57,11 +58,16 @@ int TableFind(name_table *table, TNODE *key)
 
 	uint32_t keyh = djb_hash(ID(key), LEN(key));
 
-	for (int it = 0; it != table->size; it++)
-		if (TYPE(key) == table->data[it].type && table->data[it].name == keyh)
-			return table->data[it].addr; 
-
-	return -1;	
+	for (int it = 0; it != table->size; it++) {
+		if (TYPE(key) == table->data[it].type
+			       	&& table->data[it].name == keyh) {
+			printf("[found] ADDRESS = %d\n",
+					table->data[it].addr );
+			return table->data[it].addr;
+		}
+	}	
+	//TODO COLLISIONS!!!
+	return 0;	
 }
 
 int TableDtor(name_table *table)
@@ -73,6 +79,30 @@ int TableDtor(name_table *table)
 	table->data = NULL;
 
 	return 0;
+}
+
+int TableAddArg(name_table *table, TNODE *token, int size)
+{
+	CHECK_(!table, 				NTABLE_BAD_NODE);
+	CHECK_(!table->data, 			NTABLE_BAD_NODE);
+	CHECK_(table->size >= MAX_TABLE_SIZE, 	NTABLE_OVERFLOW);
+	CHECK_(token == NULL,			TREE_NULL_NODE);
+
+// SLOW SLOW SLOW SLOW!
+	
+	int addr = table->curr_arg_addr;
+
+	uint32_t srch = djb_hash(ID(token), LEN(token));
+	table_node new_name = {srch, TYPE(token), addr};
+	
+	table->curr_arg_addr += size;
+	table->arg_cnt++;
+	table->data[table->size++] = new_name;
+
+	printf("\n\nADDING NEW ARG: %.*s, addr = %d\n\n", 
+			LEN(token), ID(token), addr);
+
+	return addr;
 }
 
 #undef LEN

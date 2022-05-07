@@ -19,12 +19,16 @@ struct table_node {
 struct name_table {
 	table_node *data;
 	int size;
-	int curr_addr = 1;
+	int var_cnt = 0;
+	int arg_cnt = 0;
+	int curr_addr = -8;
+	int curr_arg_addr = 16;
 	int rsp_pos = 0;
 };
 
 int TableCtor(name_table *table);
-int TableInsert(name_table *table, TNODE *node, int size = 1);
+int TableInsert(name_table *table, TNODE *node, int size = 8);
+int TableAddArg(name_table *table, TNODE *token, int size = 8);
 int TableFind(name_table *table, TNODE *key);
 int TableDtor(name_table *table);
 

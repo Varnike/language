@@ -7,7 +7,7 @@ static int asm_call(TNODE *node, name_table *table, FILE *file);
 static int asm_while(TNODE *node, name_table *table, FILE *file);
 static int asm_id(TNODE *node, name_table *table, FILE *file);
 static int trav_translate(TNODE *node, name_table *table, FILE *file);
-static int std_func_check(TNODE *node);                               
+//static int std_func_check(TNODE *node);                               
 
 // To determine whether it is necessary to push or pop args if function params
 int ASM_ARG_POP = 0;
@@ -119,6 +119,7 @@ int trav_translate(TNODE *node, name_table *table, FILE *file)
 	VISIT(LEFT);
 	VISIT(RIGHT);
 /////
+
 	switch (TYPE(node)) {
 	case OPER:
 		PRINT("\t%s\n", getAsmOper(STR(node)));
@@ -287,23 +288,7 @@ static int asm_id(TNODE *node, name_table *table, FILE *file)
 	return 0;
 }
 
-#define STD_FUNC_CMP(name, type, size)				\
-	if (strncmp(ID(node), name,				\
-		(size > LEN(node)) ? size : LEN(node)) == 0) {	\
-		return type;					\
-	} else
 
-static int std_func_check(TNODE *node)
-{
-	if (!node || TYPE(node) != ID)
-		return -1;
-
-	STD_FUNC_CMP("Introduce",  STD_SCAN, 9)
-	STD_FUNC_CMP("Conclusion", STD_PRINT, 10)
-	STD_FUNC_CMP("Show",       STD_SHOW, 4)
-
-	return -1;
-}
 
 #undef STD_FUNC_CMP
 #undef VISIT

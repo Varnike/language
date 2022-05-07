@@ -8,6 +8,7 @@ static int func_epilog(comp_data *cdata, name_table *table);
 static int func_prolog(comp_data *cdata);
 static int set_label_src(comp_data *cdata);
 static int upd_label_src(comp_data *cdata);
+static int write_std_func(comp_data *cdata);
 
 static int trav_while_node
 	(TNODE *node, name_table *table,  comp_data *cdata);
@@ -19,6 +20,10 @@ static int set_cmp_cond
 	(TNODE *node, name_table *table,  comp_data *cdata);
 static int trav_if_node
 	(TNODE *node, name_table *table,  comp_data *cdata);
+static int trav_funcdef_node
+	(TNODE *node,  comp_data *cdata);
+static int trav_call_node
+	(TNODE *node, name_table *table,  comp_data *cdata);
 
 
 /** To determine whether it is necessary
@@ -26,18 +31,20 @@ static int trav_if_node
  */
 int X64_ARG_POP = 0;
 
-
 int test(comp_data *cdata)
 {
 	printf("sizes: %d, %d\n", 
 			ARRAY_SIZE(mov_rax_rbx), ARRAY_SIZE(exit0));
 	WRITE_IM(PROGRAMM_ALIGN, uint64_t);
 	$$
-	//WRITE_OP(jne);
-	//WRITE_IM(0, int32_t);
-	return func_prolog(cdata);
-}
+	int rsp = func_prolog(cdata);
+	
+	//WRITE_OP(movabs_rax);
+	//WRITE_IM(777, int64_t);
 
+	
+	return rsp;
+}
 
 inline void program_exit0(comp_data *cdata, name_table *table)
 {
@@ -47,7 +54,6 @@ inline void program_exit0(comp_data *cdata, name_table *table)
 	WRITE_OP(pop_rbp);
 	WRITE_OP(exit0);
 }
-
 
 int lang64_compile(TNODE *root, const char *name_out)
 {
@@ -60,6 +66,9 @@ int lang64_compile(TNODE *root, const char *name_out)
 	TableCtor(&table);
 	ERRNUM_CHECK(ERRNUM);
 
+	LabelLinkCtor(&cdata.labels);
+	ERRNUM_CHECK(ERRNUM);
+
 	set_ex_headers(&cdata);
 
 	FILE *file_out = fopen(name_out, "w");
@@ -69,14 +78,33 @@ int lang64_compile(TNODE *root, const char *name_out)
 	table.rsp_pos = test(&cdata);
 	trav_compile(root, &table, &cdata);
 	program_exit0(&cdata, &table);
-	
-
+	$
+	LabelLinkConnect(&cdata.labels);
+	write_std_func(&cdata);
+	$
 	update_hdr(&cdata);
 	write_programm(&cdata, name_out);
 
 	return 0;
 }
 
+#define STD_FUNC_CMP(name, type, size)				\
+	if (strncmp(ID(node), name,				\
+		(size > LEN(node)) ? size : LEN(node)) == 0) {	\
+		return type;					\
+	} else
+
+int std_func_check(TNODE *node)
+{
+	if (!node || TYPE(node) != ID)
+		return -1;
+
+	STD_FUNC_CMP("Introduce",  STD_SCAN, 9)
+	STD_FUNC_CMP("Conclusion", STD_PRINT, 10)
+	STD_FUNC_CMP("Show",       STD_SHOW, 4)
+
+	return -1;
+}
 
 static int set_ex_headers(comp_data *cdata)
 {
@@ -91,9 +119,9 @@ static int set_ex_headers(comp_data *cdata)
 	return 0;
 }
 
-
 static int update_hdr(comp_data *cdata)
 {
+	$
 	CHECK_(!cdata, COMP_NULLPTR_ERR);
 	CHECK_(!cdata->buff, COMP_NULL_BUFF);
 
@@ -109,7 +137,6 @@ static int update_hdr(comp_data *cdata)
 	return 0;
 }
 
-
 static int write_programm(comp_data *cdata, const char *pr_name)
 {
 	CHECK_(!cdata, COMP_NULLPTR_ERR);
@@ -122,7 +149,6 @@ static int write_programm(comp_data *cdata, const char *pr_name)
 	fclose(out);
 }
 
-
 static int func_epilog(comp_data *cdata, name_table *table)
 {
 	CHECK_(!cdata, COMP_NULLPTR_ERR);
@@ -130,14 +156,13 @@ static int func_epilog(comp_data *cdata, name_table *table)
 	CHECK_(!table, COMP_NULLPTR_ERR);
 
 
-	*(int32_t *)&cdata->buff[table->rsp_pos] = table->size * 8;
+	*(int32_t *)&cdata->buff[table->rsp_pos] = table->var_cnt * 8;
 	WRITE_OP(add_rsp);
-	WRITE_IM(table->size * 8, int32_t);
+	WRITE_IM(table->var_cnt * 8, int32_t);
 	WRITE_OP(pop_rbp);
 
 	return 0;
 }
-
 
 static int func_prolog(comp_data *cdata)
 {
@@ -154,7 +179,6 @@ static int func_prolog(comp_data *cdata)
 	return rsp_pos;
 }
 
-
 int trav_compile
 	(TNODE *node, name_table *table,  comp_data *cdata)
 {
@@ -162,6 +186,10 @@ int trav_compile
 		return ERRNUM;
 
 	switch (TYPE(node)) {
+	case CALL:
+		return trav_call_node(node, table, cdata);
+	case DEFINE:
+		return trav_funcdef_node(node, cdata);
 	case WHILE:
 		return trav_while_node(node, table, cdata);
 	case IF:
@@ -179,11 +207,9 @@ int trav_compile
 			VISIT(RIGHT);
 
 			int addr = TableFind(table, LEFT);
-			if (addr < 0)
+			if (addr == 0)
 				addr = TableInsert(table, LEFT);
-			
-			addr *= -8;
-
+			printf("ASIGN ADDRESS : %d\n", addr);
 			WRITE_OP(mov_mrbp_rax);
 			WRITE_IM(addr, int32_t);
 			return 0;
@@ -191,6 +217,8 @@ int trav_compile
 			trav_oper_node(node, table,  cdata);
 			return 0;
 		}
+		break;
+	default:
 		break;
 	}
 	
@@ -200,6 +228,10 @@ int trav_compile
 /////////////////////////////////////////////////
 	
 	switch (TYPE(node)) {
+	case RETURN:
+		func_epilog(cdata, table);
+		WRITE_OP(ret);
+		break;
 	case OPER:	
 		break;
 	case CONST:
@@ -209,14 +241,14 @@ int trav_compile
 	case ID:
 		{
 		int addr = TableFind(table, node);
-		if (addr < 0) {
+		if (addr == 0) {
 			fprintf(stderr, "ERROR: cant find var %.*s\n", 
 					LEN(node), ID(node));
 			return ERRNUM = TRANSL_UNINIT_VAR;
 		}
 
 		WRITE_OP(mov_rax_mrbp);
-		WRITE_IM(addr * (-8), int32_t);	// TODO in const
+		WRITE_IM(addr, int32_t);	// TODO in const
 						//
 		}
 		break;
@@ -287,10 +319,10 @@ int set_cmp_cond(TNODE *node, name_table *table,  comp_data *cdata)
 
 	switch (STR(node)) {
 	case RELOP_LT:
-		WRITE_OP(setb_al);
+		WRITE_OP(setl_al);
 		break;
 	case RELOP_LE:
-		WRITE_OP(setbe_al);
+		WRITE_OP(setle_al);
 		break;
 	case RELOP_EQ:
 		WRITE_OP(sete_al);
@@ -299,10 +331,10 @@ int set_cmp_cond(TNODE *node, name_table *table,  comp_data *cdata)
 		WRITE_OP(setne_al);
 		break;
 	case RELOP_GT:
-		WRITE_OP(seta_al);
+		WRITE_OP(setb_al);
 		break;
 	case RELOP_GE:
-		WRITE_OP(setae_al);
+		WRITE_OP(setbe_al);
 		break;
 	}
 
@@ -321,6 +353,7 @@ int set_cmp_cond(TNODE *node, name_table *table,  comp_data *cdata)
 	int dst = cdata->ip;
 
 #define IP		cdata->ip
+
 int trav_if_node(TNODE *node, name_table *table,  comp_data *cdata)
 {
 	VISIT(LEFT);
@@ -361,6 +394,113 @@ int trav_while_node(TNODE *node, name_table *table,  comp_data *cdata)
 
 	return 0;
 }
+
+static int trav_init_args(TNODE *node, name_table *table)
+{
+	if (LEFT) 
+		trav_init_args(LEFT, table);
+	if (RIGHT) 
+		trav_init_args(RIGHT, table);
+		
+	if (TYPE(node) == ID)
+		TableAddArg(table, node);
+	
+	return 0;
+}
+
+int trav_funcdef_node(TNODE *node, comp_data *cdata)
+{
+	name_table func_table = {};
+	TableCtor(&func_table);
+	ERRNUM_CHECK(ERRNUM);
+	//TODO fix jump?
+	WRITE_OP(jmp);
+	SET_ENTRY(skip_f);
+	LabelLinkAddEntry(&cdata->labels, LEFT->left, 
+				cdata->buff + cdata->ip);
+
+
+	trav_init_args(LEFT->right, &func_table);
+	
+	func_table.rsp_pos = func_prolog(cdata);
+	trav_compile(RIGHT, &func_table, cdata);
+
+	UPDATE_ENTRY(skip_f);
+
+	TableDtor(&func_table);
+	return 0;
+}
+#if 0
+static int trav_mov_args
+	(TNODE *node, name_table *table,  comp_data *cdata, int flag)
+{
+	if (RIGHT) 
+		trav_mov_args(RIGHT, table);
+	if (LEFT) 
+		trav_mov_args(LEFT, table);
+
+	if (TYPE(node) == ID)
+}
+#endif
+
+int trav_call_node(TNODE *node, name_table *table,  comp_data *cdata)
+{
+	//TODO link calls and functions
+	int func_t = std_func_check(LEFT);
+	switch (func_t) {	
+	case STD_SCAN:
+		WRITE_OP(call);
+		WRITE_IM(STDIN_FUNC_ADDR - cdata->ip - 4, int32_t);
+		return 0;
+	case STD_PRINT:
+		VISIT(RIGHT);
+		WRITE_OP(call);
+		WRITE_IM(STDOUT_FUNC_ADDR - cdata->ip - 4, int32_t);
+
+		return 0;
+	default:
+		break;
+	}
+
+	int arg_cnt = 0;
+	TNODE *func_name = LEFT;
+
+	node = RIGHT;
+	do {
+		VISIT(RIGHT);
+		WRITE_OP(push_rax);
+		arg_cnt++;
+	} while (node = LEFT);
+
+	WRITE_OP(call);
+	LabelLinkAddCall(&cdata->labels, func_name, 
+			cdata->buff +cdata->ip);
+	WRITE_IM(0x14881488, int32_t);
+
+	WRITE_OP(add_rsp);
+	WRITE_IM(arg_cnt * 8, int32_t);
+
+	return 0;
+}
+
+int write_std_func(comp_data *cdata)
+{
+	for ( ; cdata->ip != STDOUT_FUNC_ADDR; )
+		WRITE_OP(nop);
+
+	WRITE_OP(std_print);
+
+	for ( ; cdata->ip != STDIN_FUNC_ADDR; )
+		WRITE_OP(nop);
+
+	WRITE_OP(std_read);
+
+	return 0;
+}
+#undef SET_ENTRY
+#undef UPDATE_ENTRY
+#undef SET_DST
+#undef IP
 
 #undef STD_FUNC_CMP
 #undef VISIT
