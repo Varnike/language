@@ -94,7 +94,8 @@ const char *errmsg(int errt)
 		"Language double init error!",
 		"Compiler nullptr pointer error!",
 		"Compiler nullptr buffer error!",
-		"Compiler bad data in programm buffer!"
+		"Compiler bad data in programm buffer!",
+		"Undefined function call error!"
 	};
 
 	switch (errt/100) {

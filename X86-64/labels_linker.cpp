@@ -63,9 +63,11 @@ int LabelLinkConnect(label_link *labl)
 	CHECK_(!labl->entry, 	LANG_NULLPTR_ERR);
 	CHECK_(!labl->calls, 	LANG_NULLPTR_ERR);
 
-	for (int it = 0; it < labl->c_size; it++)
+	int found_flag = 0;
+
+	for (int it = 0; it < labl->c_size; it++) {
+		found_flag = 0;
 	for (int srch = 0; srch < labl->e_size; srch++) {
-		printf("it = %d, srch = %d", it, srch);
 
 		if (LEN(labl->calls[it]) == LEN(labl->entry[srch]) && 
 		    strncmp(ID(labl->calls[it]), ID(labl->entry[srch]),
@@ -75,12 +77,23 @@ int LabelLinkConnect(label_link *labl)
 				(int64_t)labl->entry[srch].addr - 
 				(int64_t)labl->calls[it].addr - 
 				sizeof(int32_t);
+			found_flag = 1;
 		}
 	}
-	
+	if (!found_flag) {
+		printf(RED "error:" RESET " \'%.*s\' was not declared "
+		       "in this scope\n",
+			LEN(labl->calls[it]), ID(labl->calls[it]));
+		return ERRNUM = UNDEF_FUNC_CALL;
+	}
+	}
 	return 0;
 }
 
+#undef RED
+#undef RESET
+#undef GRN
+#undef BLU
 #undef ID
 #undef LEN
 #undef MAX

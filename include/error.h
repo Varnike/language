@@ -21,6 +21,7 @@
 
 extern int ERRNUM;
 
+
 const int ERRS_CNT = 23;
 
 /*
@@ -137,7 +138,8 @@ enum lang_errs {
 	TRANSL_DOUBLE_INIT   = 511,
 	COMP_NULLPTR_ERR     = 512,
 	COMP_NULL_BUFF       = 513,
-	COMP_BAD_DATA        = 514
+	COMP_BAD_DATA        = 514,
+	UNDEF_FUNC_CALL	     = 515
 };
 /*
  * Returns a pointer to the textual description of the code errtype.

@@ -1,6 +1,12 @@
 #ifndef LABEL_LINKER
 #define LABEL_LINKER
 #include "../tree.h"
+
+#define RED   "\x1B[31m"
+#define GRN   "\x1B[32m"
+#define RESET "\x1B[0m"
+#define BLU   "\x1B[34m"
+
 struct func_entry {
 	unsigned char *addr = 0;
 	TNODE *node;

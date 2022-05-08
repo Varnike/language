@@ -8,8 +8,7 @@ gg = 5;
 gg = Introduce(1);
 c = 0;
 
-
-fact = Factorial(gg);
+fact = Factorial(0 gg);
 Conclusion(fact);
 #Consider {
 #        Conclusion(fact);
@@ -18,11 +17,10 @@ Conclusion(fact);
 
 
 Theorem (Factorial)
-Given (x)
+Given (y x)
 Proof
         suppose (x <= 1) perfomed 
         therefore proven 1;
         proven x * Factorial(x - 1); 
 QED
-
 $

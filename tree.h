@@ -33,7 +33,7 @@
 #define ERRNUM_CHECK(ret_val)   						\
 	{									\
 		if(ERRNUM) {							\
-			perror(errmsg(ERRNUM));					\
+			fprintf(stderr, "\x1B[31m" "%s" "\x1B[0m\n", errmsg(ERRNUM));					\
 			TREE_EXIT_ERR(ret_val);					\
 		}								\
 	}

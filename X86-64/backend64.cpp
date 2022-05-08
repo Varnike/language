@@ -9,6 +9,7 @@ static int func_prolog(comp_data *cdata);
 static int set_label_src(comp_data *cdata);
 static int upd_label_src(comp_data *cdata);
 static int write_std_func(comp_data *cdata);
+static int addstd_n_link(comp_data *cdata);
 
 static int trav_while_node
 	(TNODE *node, name_table *table,  comp_data *cdata);
@@ -74,14 +75,12 @@ int lang64_compile(TNODE *root, const char *name_out)
 	FILE *file_out = fopen(name_out, "w");
 	CHECK_(!file_out, FOPEN_ERR);
 
-
 	table.rsp_pos = test(&cdata);
 	trav_compile(root, &table, &cdata);
 	program_exit0(&cdata, &table);
-	$
-	LabelLinkConnect(&cdata.labels);
-	write_std_func(&cdata);
-	$
+	
+	addstd_n_link(&cdata);
+	
 	update_hdr(&cdata);
 	write_programm(&cdata, name_out);
 
@@ -413,7 +412,7 @@ int trav_funcdef_node(TNODE *node, comp_data *cdata)
 	name_table func_table = {};
 	TableCtor(&func_table);
 	ERRNUM_CHECK(ERRNUM);
-	//TODO fix jump?
+
 	WRITE_OP(jmp);
 	SET_ENTRY(skip_f);
 	LabelLinkAddEntry(&cdata->labels, LEFT->left, 
@@ -430,23 +429,11 @@ int trav_funcdef_node(TNODE *node, comp_data *cdata)
 	TableDtor(&func_table);
 	return 0;
 }
-#if 0
-static int trav_mov_args
-	(TNODE *node, name_table *table,  comp_data *cdata, int flag)
-{
-	if (RIGHT) 
-		trav_mov_args(RIGHT, table);
-	if (LEFT) 
-		trav_mov_args(LEFT, table);
-
-	if (TYPE(node) == ID)
-}
-#endif
 
 int trav_call_node(TNODE *node, name_table *table,  comp_data *cdata)
 {
-	//TODO link calls and functions
 	int func_t = std_func_check(LEFT);
+	/*
 	switch (func_t) {	
 	case STD_SCAN:
 		WRITE_OP(call);
@@ -461,6 +448,7 @@ int trav_call_node(TNODE *node, name_table *table,  comp_data *cdata)
 	default:
 		break;
 	}
+	*/
 
 	int arg_cnt = 0;
 	TNODE *func_name = LEFT;
@@ -497,6 +485,40 @@ int write_std_func(comp_data *cdata)
 
 	return 0;
 }
+
+// NOTE: do not use LabelLink struct after this function
+int addstd_n_link(comp_data *cdata)
+{
+	char stdin_name[]  = "Introduce";
+	char stdout_name[] = "Conclusion";
+
+	DATA std_dat = {};
+	std_dat.id = stdin_name;
+
+	TNODE node_in = {};
+	node_in.data = {
+		.value     = std_dat,
+		.len       = strlen(stdin_name),
+		.data_type = ID
+	};
+
+	LabelLinkAddEntry(&cdata->labels, &node_in, 
+				cdata->buff + cdata->ip);
+	WRITE_OP(std_read);
+
+	TNODE node_out = node_in;
+	node_out.data.value.id = stdout_name;
+	node_out.data.len      = strlen(stdout_name);
+	LabelLinkAddEntry(&cdata->labels, &node_out, 
+				cdata->buff + cdata->ip);
+	
+	WRITE_OP(std_print);
+
+	LabelLinkConnect(&cdata->labels);
+
+	return 0;
+}
+
 #undef SET_ENTRY
 #undef UPDATE_ENTRY
 #undef SET_DST
