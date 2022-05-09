@@ -130,5 +130,5 @@ $ chmod +x out
 
 Where "out" is the name of the compiled program. After that you can run program by running following command in console:
 ```sh
-./out
+$ ./out
 ```
