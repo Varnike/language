@@ -173,7 +173,7 @@ static int func_prolog(comp_data *cdata)
 	WRITE_OP(sub_rsp);
 
 	int rsp_pos = cdata->ip;
-	WRITE_IM(0x1488, int32_t);
+	WRITE_IM(UNSET_RSP, int32_t);
 
 	return rsp_pos;
 }
@@ -181,6 +181,10 @@ static int func_prolog(comp_data *cdata)
 int trav_compile
 	(TNODE *node, name_table *table,  comp_data *cdata)
 {
+	CHECK_(!cdata, COMP_NULLPTR_ERR);
+	CHECK_(!cdata->buff, COMP_NULL_BUFF);
+	CHECK_(!table, COMP_NULLPTR_ERR);
+
 	if (ERRNUM)
 		return ERRNUM;
 
@@ -202,7 +206,6 @@ int trav_compile
 		return 0;
 	case OPER:
 		if (STR(node) == OP_ASG) {
-			//TODO optimization
 			VISIT(RIGHT);
 
 			int addr = TableFind(table, LEFT);
@@ -247,8 +250,7 @@ int trav_compile
 		}
 
 		WRITE_OP(mov_rax_mrbp);
-		WRITE_IM(addr, int32_t);	// TODO in const
-						//
+		WRITE_IM(addr, int32_t);		
 		}
 		break;
 	default:
@@ -273,14 +275,18 @@ int trav_oper_node(TNODE *node, name_table *table,  comp_data *cdata)
 			break;
 		case OP_MUL:
 			WRITE_OP(imul_rax_rbx);
-#ifdef FLOAT_AS_INT
+#ifdef INT_AS_FLOAT
 			WRITE_OP(xor_rdx);
 			WRITE_OP(movabs_rbx);
-			WRITE_IM(1000, uint32_t);
+			WRITE_IM(PRESISION, uint64_t);
 			WRITE_OP(div_rbx);
 #endif
 			break;
 		case OP_DIV:
+#ifdef INT_AS_FLOAT
+			WRITE_OP(imul_rax_imm);
+			WRITE_IM(PRESISION, uint32_t);
+#endif
 			WRITE_OP(xor_rdx);
 			WRITE_OP(div_rbx);
 			break;
@@ -387,7 +393,8 @@ int trav_while_node(TNODE *node, name_table *table,  comp_data *cdata)
 	UPDATE_ENTRY(jmp_cond);
 
 	VISIT(LEFT);
-
+	
+	WRITE_OP(test_rax_rax);
 	WRITE_OP(jne);
 	WRITE_IM(while_start - IP - 4, int32_t);
 
@@ -433,22 +440,29 @@ int trav_funcdef_node(TNODE *node, comp_data *cdata)
 int trav_call_node(TNODE *node, name_table *table,  comp_data *cdata)
 {
 	int func_t = std_func_check(LEFT);
-	/*
+	
 	switch (func_t) {	
 	case STD_SCAN:
 		WRITE_OP(call);
-		WRITE_IM(STDIN_FUNC_ADDR - cdata->ip - 4, int32_t);
+		LabelLinkAddCall(&cdata->labels, LEFT, 
+			cdata->buff +cdata->ip);
+
+		WRITE_IM(UNSET_DST, int32_t);
 		return 0;
 	case STD_PRINT:
 		VISIT(RIGHT);
 		WRITE_OP(call);
-		WRITE_IM(STDOUT_FUNC_ADDR - cdata->ip - 4, int32_t);
+		LabelLinkAddCall(&cdata->labels, LEFT, 
+			cdata->buff + cdata->ip);
+		WRITE_IM(UNSET_DST, int32_t);
+		//WRITE_IM(STDOUT_FUNC_ADDR - cdata->ip - 4, int32_t);
 
 		return 0;
 	default:
 		break;
 	}
-	*/
+	
+	
 
 	int arg_cnt = 0;
 	TNODE *func_name = LEFT;
@@ -463,7 +477,7 @@ int trav_call_node(TNODE *node, name_table *table,  comp_data *cdata)
 	WRITE_OP(call);
 	LabelLinkAddCall(&cdata->labels, func_name, 
 			cdata->buff +cdata->ip);
-	WRITE_IM(0x14881488, int32_t);
+	WRITE_IM(UNSET_DST, int32_t);
 
 	WRITE_OP(add_rsp);
 	WRITE_IM(arg_cnt * 8, int32_t);

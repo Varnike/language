@@ -5,6 +5,7 @@
 int main()
 {
 	LangProcces("test64.in");
+	//LangProcces("check.txt");
 	//lang64_compile(NULL, "out");
 	
 	//label_link label = {};

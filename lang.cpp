@@ -27,10 +27,10 @@ int LangProcces(char *namein)
 	char *src_str = NULL;
 	
 	do {
-//		dump_file = fopen("lang_dump.txt", "w");
-//		CHECK_(dump_file == NULL, FOPEN_ERR);
+		dump_file = fopen("lang_dump.txt", "w");
+		CHECK_(dump_file == NULL, FOPEN_ERR);
 
-		//init("check.txt", &btext);
+		init("check_old.txt", &btext);
 
 		init(namein, &btext);
 		CHECK_BREAK(ERRNUM);
@@ -51,8 +51,9 @@ int LangProcces(char *namein)
 		}
 
 		TreeDump(root);
-		
+		$	
 		//LangTranslate(root, "asm.txt");
+		$
 		lang64_compile(root, "out");
 
 		TreeDtor(root);	

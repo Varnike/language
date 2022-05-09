@@ -43,7 +43,7 @@ int TableInsert(name_table *table, TNODE *token, int size)
 	table_node new_name = {srch, TYPE(token), addr};
 	
 	table->curr_addr -= size;
-	table->arg_cnt++;
+	table->var_cnt++;
 	table->data[table->size++] = new_name;
 
 	return addr;
@@ -66,7 +66,7 @@ int TableFind(name_table *table, TNODE *key)
 			return table->data[it].addr;
 		}
 	}	
-	//TODO COLLISIONS!!!
+
 	return 0;	
 }
 

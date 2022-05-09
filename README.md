@@ -119,13 +119,13 @@ Conclusion(y);
 $             
 ```
 
+# X86-64 compilation.
+Now you can compile programs in our language under the X86-64 architecture under the Linux operating system. In tests, a program compiled under X86-64 runs 200 times faster than a program running on our processor.
 
+### Usage
+After compilation, you need to make the compiled program executable:
+```sh
+$ chmod +x out
+```
 
-
-
-
-
-
-
-
-
+Where "out" is the name of the compiled program.

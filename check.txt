@@ -1,22 +1,29 @@
+y1 = 0;
+y1 = Introduce(1);
+answ = sin(y1);   
+              
+Conclusion(answ);
+
+
 Theorem (Factorial)
 Given (x)
 Proof
-        suppose (x <= 1) perfomed 
-        therefore proven 1;
-        proven x * Factorial(x - 1); 
+        suppose (x <= 100) perfomed 
+        therefore proven 100;
+        proven x * Factorial(x - 100); 
 QED
 
 Theorem (pow)
 Given (x y)
 Proof
-        suppose (y == 0) perfomed
-        therefore proven 1;
+        suppose (y  == 0) perfomed
+        therefore proven 100;
 
         mulx = x;
         Consider {
                 x = x * mulx; 
-                y = y - 1;
-        } assuming expression (y >= 2) perfomed;
+                y = y - 100;
+        } assuming expression (y >= 200) perfomed;
         proven x;
 QED
 
@@ -28,25 +35,19 @@ Proof
         minus    = 0;
 
         Consider {
-                currVal = pow(x currTerm * 2 + 1);
-                Conclusion(currVal);
-                currVal = currVal / Factorial(2 * currTerm + 1);
-                suppose (minus == 1) perfomed
+                currVal = pow(x currTerm * 200 + 100);
+                #Conclusion(currTerm);
+                currVal = currVal / Factorial(200 * currTerm + 100);
+                suppose (minus == 100) perfomed
                 therefore {
                         result = result - currVal;
                         minus = 0;
                 } however {
                         result = result + currVal;      
-                        minus = 1;
+                        minus = 100;
                 }
-                currTerm = currTerm + 1;
-        } assuming expression (currTerm <= 10) perfomed;
+                currTerm = currTerm + 100;
+        } assuming expression (currTerm < 10000) perfomed;
         proven result;
 QED
-
-y = 0;
-Introduce(y);
-y = sin(y);   
-              
-Conclusion(y);
 $

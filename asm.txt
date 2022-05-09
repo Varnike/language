@@ -1,5 +1,0 @@
-	push 80.000000
-	push 9.000000
-	add
-	pop [bx+0]
-hlt

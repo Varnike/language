@@ -32,8 +32,11 @@
 						trav_compile(node, newt, cdata);
 #define PRINT(...)			fprintf(file, __VA_ARGS__)
 
+//#define INT_AS_FLOAT
+const int PRESISION = 100;
 const int COMP_BUFF_SIZE = 5048;
 const int UNSET_DST = 0xFFFFFFFF;
+const int UNSET_RSP = 0x1488;
 const int STDOUT_FUNC_ADDR = 4000;
 const int STDIN_FUNC_ADDR = 4100;
 

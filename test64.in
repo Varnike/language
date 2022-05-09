@@ -1,26 +1,22 @@
-#Consider {
-#        # do smth
-#     	suppose (a > 0 - 1) perfomed
-#	therefore a = b * b;
-# 	b = b + 1;       
-#} assuming expression (b < 5) perfomed;
-gg = 5;
-gg = Introduce(1);
-c = 0;
+#Introduce(gg);
 
-fact = Factorial(0 gg);
-Conclusion(fact);
-#Consider {
-#        Conclusion(fact);
-#	c = c + 1;
-#} assuming expression (c < 1000) perfomed;
+it = 0;
+x  = 0;
+#x = Introduce(x);
+Consider {
+	x = Factorial(5);
+	it = it + 1;
+} assuming expression (it < 8000000) perfomed;
+
+Conclusion(x);
 
 
 Theorem (Factorial)
-Given (y x)
+Given (x)
 Proof
         suppose (x <= 1) perfomed 
         therefore proven 1;
         proven x * Factorial(x - 1); 
 QED
 $
+

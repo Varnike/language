@@ -17,8 +17,8 @@ int LangTranslate(TNODE *root, const char *name_out)
 	CHECK_(!name_out, LANG_NULL_FILENAME);
 	TREE_CHECK(root, ERRNUM);
 
-	lang64_compile(root, name_out);
-	return 0;
+	//lang64_compile(root, name_out);
+	//return 0;
 
 	FILE *file_out = fopen(name_out, "w");
 	CHECK_(!file_out, FOPEN_ERR);
