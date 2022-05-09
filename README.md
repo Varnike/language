@@ -128,4 +128,7 @@ After compilation, you need to make the compiled program executable:
 $ chmod +x out
 ```
 
-Where "out" is the name of the compiled program.
+Where "out" is the name of the compiled program. After that you can run program by running following command in console:
+```sh
+./out
+```
