@@ -10,6 +10,10 @@ static int set_label_src(comp_data *cdata);
 static int upd_label_src(comp_data *cdata);
 static int write_std_func(comp_data *cdata);
 static int addstd_n_link(comp_data *cdata);
+static int chmod_ex(const char *namein);
+static int program_start(comp_data *cdata);
+static void program_exit0(comp_data *cdata, name_table *table);
+
 
 static int trav_while_node
 	(TNODE *node, name_table *table,  comp_data *cdata);
@@ -26,28 +30,6 @@ static int trav_funcdef_node
 static int trav_call_node
 	(TNODE *node, name_table *table,  comp_data *cdata);
 
-
-int program_start(comp_data *cdata)
-{
-	printf("sizes: %d, %d\n", 
-			ARRAY_SIZE(mov_rax_rbx), ARRAY_SIZE(exit0));
-	WRITE_IM(PROGRAMM_ALIGN, uint64_t);
-	$$
-	int rsp = func_prolog(cdata);
-	
-
-	
-	return rsp;
-}
-
-inline void program_exit0(comp_data *cdata, name_table *table)
-{
-	*(int32_t *)&cdata->buff[table->rsp_pos] = table->size * 8;
-	WRITE_OP(add_rsp);
-	WRITE_IM(table->size * 8, int32_t);
-	WRITE_OP(pop_rbp);
-	WRITE_OP(exit0);
-}
 
 int lang64_compile(TNODE *root, const char *name_out)
 {
@@ -76,26 +58,29 @@ int lang64_compile(TNODE *root, const char *name_out)
 	
 	update_hdr(&cdata);
 	write_programm(&cdata, name_out);
+	chmod_ex(name_out);
 
 	return 0;
 }
 
-#define STD_FUNC_CMP(name, type, size)				\
-	if (strncmp(ID(node), name,				\
-		(size > LEN(node)) ? size : LEN(node)) == 0) {	\
-		return type;					\
-	} else
-
-int std_func_check(TNODE *node)
+static int program_start(comp_data *cdata)
 {
-	if (!node || TYPE(node) != ID)
-		return -1;
+	printf("sizes: %d, %d\n", 
+			ARRAY_SIZE(mov_rax_rbx), ARRAY_SIZE(exit0));
+	WRITE_IM(PROGRAMM_ALIGN, uint64_t);
+	$$
+	int rsp = func_prolog(cdata);
+	
+	return rsp;
+}
 
-	STD_FUNC_CMP("Introduce",  STD_SCAN, 9)
-	STD_FUNC_CMP("Conclusion", STD_PRINT, 10)
-	STD_FUNC_CMP("Show",       STD_SHOW, 4)
-
-	return -1;
+static void program_exit0(comp_data *cdata, name_table *table)
+{
+	*(int32_t *)&cdata->buff[table->rsp_pos] = table->size * 8;
+	WRITE_OP(add_rsp);
+	WRITE_IM(table->size * 8, int32_t);
+	WRITE_OP(pop_rbp);
+	WRITE_OP(exit0);
 }
 
 static int set_ex_headers(comp_data *cdata)
@@ -139,6 +124,18 @@ static int write_programm(comp_data *cdata, const char *pr_name)
 
 	fwrite(cdata->buff, cdata->ip, sizeof(char), out);
 	fclose(out);
+}
+
+static int chmod_ex(const char *namein)
+{
+	CHECK_(!namein, COMP_NULLPTR_ERR);
+
+	char *chmod = "chmod +x ";
+	char chmod_arr[50] = {};
+	strncpy(chmod_arr, chmod, 9);
+	strcat(chmod_arr, namein);
+
+	system(chmod_arr);
 }
 
 static int func_epilog(comp_data *cdata, name_table *table)
@@ -428,6 +425,25 @@ int trav_funcdef_node(TNODE *node, comp_data *cdata)
 
 	TableDtor(&func_table);
 	return 0;
+}
+
+
+#define STD_FUNC_CMP(name, type, size)				\
+	if (strncmp(ID(node), name,				\
+		(size > LEN(node)) ? size : LEN(node)) == 0) {	\
+		return type;					\
+	} else
+
+int std_func_check(TNODE *node)
+{
+	if (!node || TYPE(node) != ID)
+		return -1;
+
+	STD_FUNC_CMP("Introduce",  STD_SCAN, 9)
+	STD_FUNC_CMP("Conclusion", STD_PRINT, 10)
+	STD_FUNC_CMP("Show",       STD_SHOW, 4)
+
+	return -1;
 }
 
 int trav_call_node(TNODE *node, name_table *table,  comp_data *cdata)

@@ -326,34 +326,34 @@
 < isOP >	249
 < lexer_process >	104
 < lexer_process >	104
-node : [  0x55f9e66b1fe0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b2020  ], datatype : [  1  ],	data : [  =  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b2060  ], datatype : [  0  ],	data : [  0  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b20a0  ], datatype : [  6  ],	data : [  ;  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b20e0  ], datatype : [  9  ],	data : [  Consider  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b2120  ], datatype : [  6  ],	data : [  {  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b2160  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b21a0  ], datatype : [  1  ],	data : [  =  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b21e0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b2220  ], datatype : [  1  ],	data : [  +  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b2260  ], datatype : [  0  ],	data : [  1  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b22a0  ], datatype : [  6  ],	data : [  ;  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b22e0  ], datatype : [  6  ],	data : [  }  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b2320  ], datatype : [  25  ],	data : [  assuming  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b2360  ], datatype : [  26  ],	data : [  expression  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b23a0  ], datatype : [  6  ],	data : [  (  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b23e0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b2420  ], datatype : [  10  ],	data : [  L  ]  	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b2460  ], datatype : [  0  ],	data : [  255  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b24a0  ], datatype : [  6  ],	data : [  )  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b24e0  ], datatype : [  27  ],	data : [  perfomed  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b2520  ], datatype : [  6  ],	data : [  ;  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
-node : [  0x55f9e66b2560  ], datatype : [  6  ],	data : [  $  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996efe0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f020  ], datatype : [  1  ],	data : [  =  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f060  ], datatype : [  0  ],	data : [  0  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f0a0  ], datatype : [  6  ],	data : [  ;  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f0e0  ], datatype : [  9  ],	data : [  Consider  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f120  ], datatype : [  6  ],	data : [  {  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f160  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f1a0  ], datatype : [  1  ],	data : [  =  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f1e0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f220  ], datatype : [  1  ],	data : [  +  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f260  ], datatype : [  0  ],	data : [  1  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f2a0  ], datatype : [  6  ],	data : [  ;  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f2e0  ], datatype : [  6  ],	data : [  }  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f320  ], datatype : [  25  ],	data : [  assuming  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f360  ], datatype : [  26  ],	data : [  expression  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f3a0  ], datatype : [  6  ],	data : [  (  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f3e0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f420  ], datatype : [  10  ],	data : [  L  ]  	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f460  ], datatype : [  0  ],	data : [  255  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f4a0  ], datatype : [  6  ],	data : [  )  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f4e0  ], datatype : [  27  ],	data : [  perfomed  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f520  ], datatype : [  6  ],	data : [  ;  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f560  ], datatype : [  6  ],	data : [  $  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
 < _GetG >	326
 < _GetStmts >	339
 < _GetStmt >	355
 < _GetId >	694
-node : [  0x55f9e66b1fe0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996efe0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
 < _GetE >	606
 < _GetT >	623
 < _GetP >	646
@@ -364,12 +364,12 @@ node : [  0x55f9e66b1fe0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil
 < _GetStmts >	339
 < _GetStmt >	355
 < _GetId >	694
-node : [  0x55f9e66b2160  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f160  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
 < _GetE >	606
 < _GetT >	623
 < _GetP >	646
 < _GetId >	694
-node : [  0x55f9e66b21e0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f1e0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
 < _GetT >	623
 < _GetP >	646
 < _GetN >	668
@@ -379,23 +379,23 @@ node : [  0x55f9e66b21e0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil
 < _GetT >	623
 < _GetP >	646
 < _GetId >	694
-node : [  0x55f9e66b23e0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
+node : [  0x55fa5996f3e0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  (nil)  ]
 < _GetE >	606
 < _GetT >	623
 < _GetP >	646
 < _GetN >	668
 < _GetStmts >	339
-node : [  0x55f9e66b1fe0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  0x55f9e66b2020  ]
-node : [  0x55f9e66b2020  ], datatype : [  1  ],	data : [  =  ], 	left : [  0x55f9e66b1fe0  ],	right : [  0x55f9e66b2060  ],	parent : [  0x55f9e66b25a0  ]
-node : [  0x55f9e66b2060  ], datatype : [  0  ],	data : [  0  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  0x55f9e66b2020  ]
-node : [  0x55f9e66b20e0  ], datatype : [  9  ],	data : [  Consider  ], 	left : [  0x55f9e66b2420  ],	right : [  0x55f9e66b2620  ],	parent : [  0x55f9e66b25e0  ]
-node : [  0x55f9e66b2160  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  0x55f9e66b21a0  ]
-node : [  0x55f9e66b21a0  ], datatype : [  1  ],	data : [  =  ], 	left : [  0x55f9e66b2160  ],	right : [  0x55f9e66b2220  ],	parent : [  0x55f9e66b2620  ]
-node : [  0x55f9e66b21e0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  0x55f9e66b2220  ]
-node : [  0x55f9e66b2220  ], datatype : [  1  ],	data : [  +  ], 	left : [  0x55f9e66b21e0  ],	right : [  0x55f9e66b2260  ],	parent : [  0x55f9e66b21a0  ]
-node : [  0x55f9e66b2260  ], datatype : [  0  ],	data : [  1  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  0x55f9e66b2220  ]
-node : [  0x55f9e66b23e0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  0x55f9e66b2420  ]
-node : [  0x55f9e66b2420  ], datatype : [  10  ],	data : [  L  ]  	left : [  0x55f9e66b23e0  ],	right : [  0x55f9e66b2460  ],	parent : [  0x55f9e66b20e0  ]
-node : [  0x55f9e66b2460  ], datatype : [  0  ],	data : [  255  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  0x55f9e66b2420  ]
+node : [  0x55fa5996efe0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  0x55fa5996f020  ]
+node : [  0x55fa5996f020  ], datatype : [  1  ],	data : [  =  ], 	left : [  0x55fa5996efe0  ],	right : [  0x55fa5996f060  ],	parent : [  0x55fa5996f5a0  ]
+node : [  0x55fa5996f060  ], datatype : [  0  ],	data : [  0  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  0x55fa5996f020  ]
+node : [  0x55fa5996f0e0  ], datatype : [  9  ],	data : [  Consider  ], 	left : [  0x55fa5996f420  ],	right : [  0x55fa5996f620  ],	parent : [  0x55fa5996f5e0  ]
+node : [  0x55fa5996f160  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  0x55fa5996f1a0  ]
+node : [  0x55fa5996f1a0  ], datatype : [  1  ],	data : [  =  ], 	left : [  0x55fa5996f160  ],	right : [  0x55fa5996f220  ],	parent : [  0x55fa5996f620  ]
+node : [  0x55fa5996f1e0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  0x55fa5996f220  ]
+node : [  0x55fa5996f220  ], datatype : [  1  ],	data : [  +  ], 	left : [  0x55fa5996f1e0  ],	right : [  0x55fa5996f260  ],	parent : [  0x55fa5996f1a0  ]
+node : [  0x55fa5996f260  ], datatype : [  0  ],	data : [  1  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  0x55fa5996f220  ]
+node : [  0x55fa5996f3e0  ], datatype : [  4  ],	data : [  x  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  0x55fa5996f420  ]
+node : [  0x55fa5996f420  ], datatype : [  10  ],	data : [  L  ]  	left : [  0x55fa5996f3e0  ],	right : [  0x55fa5996f460  ],	parent : [  0x55fa5996f0e0  ]
+node : [  0x55fa5996f460  ], datatype : [  0  ],	data : [  255  ], 	left : [  (nil)  ],	right : [  (nil)  ],	parent : [  0x55fa5996f420  ]
 < LangProcces >	54
 < LangProcces >	56

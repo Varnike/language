@@ -11,14 +11,14 @@ All variables, initialized within function body are global. Any variables initia
 ---
 ### Variables initialization
 The variable is initialized at the time of its first declaration:
-```sh
+````sh
 size = 1; # new variable 'size' is initialized and has a value of 1.
-```
+````
 Accessing a variable that has not been initialized will result in an error!
 ### Basic constructions
 Here are some examples:
 #### #1 if else construcion
-```sh
+````sh
 # if else construction
 suppose (<condition>) perfomed #any expression can be used in place of <condition>
 therefore {
@@ -28,16 +28,16 @@ therefore {
         # else
         ...
 }
-```
+````
 #### #2 while
-```sh
+````sh
 Consider {
         # do smth
         ...
 } assuming expression (<condition>) perfomed;
-```
+````
 #### #3 Functions
-```sh
+````sh
 # function body
 Theorem (func_name)
 Given (arg1 arg2) # arg1 and arg2 - function arguments names
@@ -51,18 +51,18 @@ QED
 # function call
 func_name(arg1 arg2); # any expression can be used in place of arg1 and arg2
                       # arg1 and arg2 should be separated by any space symbol
-```
+````
 #### #4 input
-```sh
+````sh
 Consider(x); # set x to input value
-```
+````
 #### #5 Output
-```sh
+````sh
 Introduce(<expr>); # print value of <expr>
-```
+````
 
 ## Program example
-```sh
+````sh
 # calculating the sine value expanded along the Taylor series
 
 Theorem (Factorial)
@@ -117,21 +117,16 @@ y = sin(y);
               
 Conclusion(y);
 $             
-```
+````
 
 # X86-64 compilation.
 Now you can compile programs in our language under the X86-64 architecture and Linux operating system. In tests, a program compiled under X86-64 runs 200 times faster than a program running on our processor.
 
 ## Usage
-After compilation, you need to make the compiled program executable:
-```sh
-$ chmod +x out
-```
-
-Where "out" is the name of the compiled program. After that you can run program by running following command in console:
-```sh
+You can run program by running following command in console:
+````sh
 $ ./out
-```
+````
 
 ## Compilation notes
 The following are a few features of how the program is compiled. The assembly code examples below were obtained by decompiling the compiled program. For convenience, instead of absolute addresses, labels are made.
@@ -139,9 +134,9 @@ The following are a few features of how the program is compiled. The assembly co
 ### Arithmetics
 So far, the compiled program can only work with integer values. To simulate floating point numbers, the last n digits can be treated as n digits after the decimal point. To enable this feature, specify constant PRESISION in backend64.h to 10^n and define INT_AS_FLOAT.
 
-Each expression with binary operator calculates its value and returns it to rax. If the expression is complex, then when passing through the tree, the right branch will be calculated first, then the rax will be saved, after that the right branch and the expression itself will be calculated. 
+Each expression with binary operator calculates its value and returns it to `rax`. If the expression is complex, then when passing through the tree, the right branch will be calculated first, then the `rax` will be saved, after that the right branch and the expression itself will be calculated. 
 
-```asm
+````asm
 ;------------------------------------------------
 ; y = 0;
 ; x = y + 5;
@@ -158,10 +153,10 @@ Each expression with binary operator calculates its value and returns it to rax.
 	pop rax
 	add rax, rbx
 	mov qword [var_10h], rax
-```
+````
 ### Relation operators
-As for arithmetic operators, conditional operators evaluate their condition and, depending on the result, assign rax 0 or 1.
-```asm
+As for arithmetic operators, conditional operators evaluate their condition and, depending on the result, assign `rax` 0 or 1.
+````asm
 ;------------------------------------------------
 ; x = (2 >= 3);
 ;------------------------------------------------
@@ -176,10 +171,10 @@ As for arithmetic operators, conditional operators evaluate their condition and,
 	movabs rax, 0
 	setge al
 	mov qword [var_8h], rax
-```
+````
 
 ### While example
-```asm
+````asm
 
 ;------------------------------------------------
 ; Consider {
@@ -198,9 +193,9 @@ L1:	; ...
 
 	test rax, rax
 	jne L2
-```
+````
 ### Standart functions
 There are two standart functions: print and read. They are automatically used when the Introduce() and Conclusion() functions are called. After the program code is compiled, exit(0) and these two functions are added to the end of the executable file and linked to the rest of the program.
 
 ### Function calls
-All arguments are passed through stack and have to be poped after function call. Function returns its value in rax register.
+All arguments are passed through stack and have to be poped after function call. Function returns its value in `rax` register.
