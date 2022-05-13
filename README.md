@@ -177,8 +177,7 @@ As for arithmetic operators, conditional operators evaluate their condition and,
 	setge al
 	mov qword [var_8h], rax
 ```
-### Function calls
-All arguments are passed through stack and have to be poped after function call. Function returns its value in rax register.
+
 ### While example
 ```asm
 
@@ -198,7 +197,10 @@ L1:	; ...
 	; ...
 
 	test rax, rax
-	jne 0xL2
+	jne L2
 ```
 ### Standart functions
 There are two standart functions: print and read. They are automatically used when the Introduce() and Conclusion() functions are called. After the program code is compiled, exit(0) and these two functions are added to the end of the executable file and linked to the rest of the program.
+
+### Function calls
+All arguments are passed through stack and have to be poped after function call. Function returns its value in rax register.
