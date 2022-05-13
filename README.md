@@ -134,13 +134,14 @@ $ ./out
 ```
 
 ## Compilation notes
-Here are some examples of how different parts of the program will be compiled under X86-64:
+The following are a few features of how the program is compiled:
 
-#### #1 Arithmetics
-Each expression with binary operator calculates its value and returns it to rax. If the expression is complex, then when passing through the tree, the right branch will be calculated first, then the rax will be saved, after that the right branch and the expression itself will be calculated.
-#### #2 Relation operators
+### Arithmetics
+So far, the compiled program can only work with integer values. To simulate floating point numbers, the last n digits can be treated as n digits after the decimal point. To enable this feature, specify constant PRESISION in backend64.h to 10^n.
+Each expression with binary operator calculates its value and returns it to rax. If the expression is complex, then when passing through the tree, the right branch will be calculated first, then the rax will be saved, after that the right branch and the expression itself will be calculated. 
+### Relation operators
 As for arithmetic operators, conditional operators evaluate their condition and, depending on the result, assign rax 0 or 1.
-#### #3 Function calls
+### Function calls
 All arguments are passed through stack and have to be poped after function call. Function returns its value in rax register.
-#### #4 Standart functions
+### Standart functions
 There are two standart functions: print and read. They are automatically used when the Introduce() and Conclusion() functions are called. After the program code is compiled, these two functions are added to the end of the executable file and linked to the rest of the program.
