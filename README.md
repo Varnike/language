@@ -120,9 +120,9 @@ $
 ```
 
 # X86-64 compilation.
-Now you can compile programs in our language under the X86-64 architecture under the Linux operating system. In tests, a program compiled under X86-64 runs 200 times faster than a program running on our processor.
+Now you can compile programs in our language under the X86-64 architecture and Linux operating system. In tests, a program compiled under X86-64 runs 200 times faster than a program running on our processor.
 
-### Usage
+## Usage
 After compilation, you need to make the compiled program executable:
 ```sh
 $ chmod +x out
@@ -132,3 +132,15 @@ Where "out" is the name of the compiled program. After that you can run program 
 ```sh
 $ ./out
 ```
+
+## Compilation notes
+Here are some examples of how different parts of the program will be compiled under X86-64:
+
+#### #1 Arithmetics
+Each expression with binary operator calculates its value and returns it to rax. If the expression is complex, then when passing through the tree, the right branch will be calculated first, then the rax will be saved, after that the right branch and the expression itself will be calculated.
+#### #2 Relation operators
+As for arithmetic operators, conditional operators evaluate their condition and, depending on the result, assign rax 0 or 1.
+#### #3 Function calls
+All arguments are passed through stack and have to be poped after function call. Function returns its value in rax register.
+#### #4 Standart functions
+There are two standart functions: print and read. They are automatically used when the Introduce() and Conclusion() functions are called. After the program code is compiled, these two functions are added to the end of the executable file and linked to the rest of the program.

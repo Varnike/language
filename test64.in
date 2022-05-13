@@ -4,19 +4,19 @@ it = 0;
 x  = 0;
 #x = Introduce(x);
 Consider {
-	x = Factorial(5);
+	#x = Factorial(5);
 	it = it + 1;
 } assuming expression (it < 8000000) perfomed;
 
-Conclusion(x);
+#Conclusion(x);
 
 
-Theorem (Factorial)
-Given (x)
-Proof
-        suppose (x <= 1) perfomed 
-        therefore proven 1;
-        proven x * Factorial(x - 1); 
-QED
+#Theorem (Factorial)
+#Given (x)
+#Proof
+#        suppose (x <= 1) perfomed 
+#        therefore proven 1;
+#        proven x * Factorial(x - 1); 
+#QED
 $
 

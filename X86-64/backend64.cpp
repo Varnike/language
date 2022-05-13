@@ -27,12 +27,7 @@ static int trav_call_node
 	(TNODE *node, name_table *table,  comp_data *cdata);
 
 
-/** To determine whether it is necessary
- *  to push or pop args(if it is function params)
- */
-int X64_ARG_POP = 0;
-
-int test(comp_data *cdata)
+int program_start(comp_data *cdata)
 {
 	printf("sizes: %d, %d\n", 
 			ARRAY_SIZE(mov_rax_rbx), ARRAY_SIZE(exit0));
@@ -40,8 +35,6 @@ int test(comp_data *cdata)
 	$$
 	int rsp = func_prolog(cdata);
 	
-	//WRITE_OP(movabs_rax);
-	//WRITE_IM(777, int64_t);
 
 	
 	return rsp;
@@ -75,7 +68,7 @@ int lang64_compile(TNODE *root, const char *name_out)
 	FILE *file_out = fopen(name_out, "w");
 	CHECK_(!file_out, FOPEN_ERR);
 
-	table.rsp_pos = test(&cdata);
+	table.rsp_pos = program_start(&cdata);
 	trav_compile(root, &table, &cdata);
 	program_exit0(&cdata, &table);
 	
