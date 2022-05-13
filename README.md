@@ -142,8 +142,13 @@ So far, the compiled program can only work with integer values. To simulate floa
 Each expression with binary operator calculates its value and returns it to rax. If the expression is complex, then when passing through the tree, the right branch will be calculated first, then the rax will be saved, after that the right branch and the expression itself will be calculated. 
 
 ```asm
+;------------------------------------------------
 ; y = 0;
 ; x = y + 5;
+;------------------------------------------------
+
+	; y - [var_8h]
+	; x - [var_10h]
 	movabs rax, 0
 	mov qword [var_8h], rax
 	mov rax, qword [var_8h]
@@ -157,7 +162,11 @@ Each expression with binary operator calculates its value and returns it to rax.
 ### Relation operators
 As for arithmetic operators, conditional operators evaluate their condition and, depending on the result, assign rax 0 or 1.
 ```asm
+;------------------------------------------------
 ; x = (2 >= 3);
+;------------------------------------------------
+
+	; x - [var_8h]
 	movabs rax, 2
 	push rax
 	movabs rax, 3
@@ -172,9 +181,13 @@ As for arithmetic operators, conditional operators evaluate their condition and,
 All arguments are passed through stack and have to be poped after function call. Function returns its value in rax register.
 ### While example
 ```asm
-;Consider {
+
+;------------------------------------------------
+; Consider {
 ;	<stmnts>
-;} assuming expression (<expression>) perfomed;
+; } assuming expression (<expression>) perfomed;
+;------------------------------------------------
+
 	jmp L1
 L2:	; ...
 	; stmnts block
