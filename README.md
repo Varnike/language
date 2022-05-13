@@ -134,14 +134,58 @@ $ ./out
 ```
 
 ## Compilation notes
-The following are a few features of how the program is compiled:
+The following are a few features of how the program is compiled. The assembly code examples below were obtained by decompiling the compiled program. For convenience, instead of absolute addresses, labels are made.
 
 ### Arithmetics
-So far, the compiled program can only work with integer values. To simulate floating point numbers, the last n digits can be treated as n digits after the decimal point. To enable this feature, specify constant PRESISION in backend64.h to 10^n.
+So far, the compiled program can only work with integer values. To simulate floating point numbers, the last n digits can be treated as n digits after the decimal point. To enable this feature, specify constant PRESISION in backend64.h to 10^n and define INT_AS_FLOAT.
+
 Each expression with binary operator calculates its value and returns it to rax. If the expression is complex, then when passing through the tree, the right branch will be calculated first, then the rax will be saved, after that the right branch and the expression itself will be calculated. 
+
+```asm
+; y = 0;
+; x = y + 5;
+	movabs rax, 0
+	mov qword [var_8h], rax
+	mov rax, qword [var_8h]
+	push rax
+	movabs rax, 5
+	mov rbx, rax
+	pop rax
+	add rax, rbx
+	mov qword [var_10h], rax
+```
 ### Relation operators
 As for arithmetic operators, conditional operators evaluate their condition and, depending on the result, assign rax 0 or 1.
+```asm
+; x = (2 >= 3);
+	movabs rax, 2
+	push rax
+	movabs rax, 3
+	mov rbx, rax
+	pop rax
+	cmp rax, rbx
+	movabs rax, 0
+	setge al
+	mov qword [var_8h], rax
+```
 ### Function calls
 All arguments are passed through stack and have to be poped after function call. Function returns its value in rax register.
+### While example
+```asm
+;Consider {
+;	<stmnts>
+;} assuming expression (<expression>) perfomed;
+	jmp L1
+L2:	; ...
+	; stmnts block
+	; ...
+
+L1:	; ...
+	; calculate expression
+	; ...
+
+	test rax, rax
+	jne 0xL2
+```
 ### Standart functions
-There are two standart functions: print and read. They are automatically used when the Introduce() and Conclusion() functions are called. After the program code is compiled, these two functions are added to the end of the executable file and linked to the rest of the program.
+There are two standart functions: print and read. They are automatically used when the Introduce() and Conclusion() functions are called. After the program code is compiled, exit(0) and these two functions are added to the end of the executable file and linked to the rest of the program.

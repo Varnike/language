@@ -1,12 +1,16 @@
 #Introduce(gg);
 
-it = 0;
-x  = 0;
+#foo(1);
+#Theorem (foo)
+#Given(x)
+#Proof
+#	proven 8;
+#QED
 #x = Introduce(x);
+x = 0;
 Consider {
-	#x = Factorial(5);
-	it = it + 1;
-} assuming expression (it < 8000000) perfomed;
+	x = x + 1;
+} assuming expression (x < 255) perfomed;
 
 #Conclusion(x);
 
