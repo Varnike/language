@@ -8,7 +8,6 @@ static int func_epilog(comp_data *cdata, name_table *table);
 static int func_prolog(comp_data *cdata);
 static int set_label_src(comp_data *cdata);
 static int upd_label_src(comp_data *cdata);
-static int write_std_func(comp_data *cdata);
 static int addstd_n_link(comp_data *cdata);
 static int chmod_ex(const char *namein);
 static int program_start(comp_data *cdata);
@@ -29,8 +28,13 @@ static int trav_funcdef_node
 	(TNODE *node,  comp_data *cdata);
 static int trav_call_node
 	(TNODE *node, name_table *table,  comp_data *cdata);
+int procces_std_call
+	(TNODE *node, name_table *table,  comp_data *cdata, int func_t);
 
-
+/**
+ * Inititalize all needed modules for copilation, 
+ * start compilation and free all after that
+ */
 int lang64_compile(TNODE *root, const char *name_out)
 {
 	comp_data cdata = {};
@@ -63,10 +67,15 @@ int lang64_compile(TNODE *root, const char *name_out)
 	return 0;
 }
 
+/**
+ * Set align and create stack frame then the programm starts
+ */
 static int program_start(comp_data *cdata)
 {
+#ifdef 	BACKEND_LOG
 	printf("sizes: %d, %d\n", 
 			ARRAY_SIZE(mov_rax_rbx), ARRAY_SIZE(exit0));
+#endif
 	WRITE_IM(PROGRAMM_ALIGN, uint64_t);
 	$$
 	int rsp = func_prolog(cdata);
@@ -74,6 +83,9 @@ static int program_start(comp_data *cdata)
 	return rsp;
 }
 
+/**
+ * Exit from programm at the end
+ */
 static void program_exit0(comp_data *cdata, name_table *table)
 {
 	*(int32_t *)&cdata->buff[table->rsp_pos] = table->size * 8;
@@ -83,6 +95,9 @@ static void program_exit0(comp_data *cdata, name_table *table)
 	WRITE_OP(exit0);
 }
 
+/**
+ * Set ELF and program headers
+ */
 static int set_ex_headers(comp_data *cdata)
 {
 	CHECK_(!cdata, COMP_NULLPTR_ERR);
@@ -96,6 +111,9 @@ static int set_ex_headers(comp_data *cdata)
 	return 0;
 }
 
+/**
+ * Update information in headers after program compiled
+ */
 static int update_hdr(comp_data *cdata)
 {
 	$
@@ -114,6 +132,9 @@ static int update_hdr(comp_data *cdata)
 	return 0;
 }
 
+/**
+ * Write compiled programm in buffer to file
+ */
 static int write_programm(comp_data *cdata, const char *pr_name)
 {
 	CHECK_(!cdata, COMP_NULLPTR_ERR);
@@ -126,6 +147,9 @@ static int write_programm(comp_data *cdata, const char *pr_name)
 	fclose(out);
 }
 
+/**
+ * Make programm file executable
+ */
 static int chmod_ex(const char *namein)
 {
 	CHECK_(!namein, COMP_NULLPTR_ERR);
@@ -138,21 +162,9 @@ static int chmod_ex(const char *namein)
 	system(chmod_arr);
 }
 
-static int func_epilog(comp_data *cdata, name_table *table)
-{
-	CHECK_(!cdata, COMP_NULLPTR_ERR);
-	CHECK_(!cdata->buff, COMP_NULL_BUFF);
-	CHECK_(!table, COMP_NULLPTR_ERR);
-
-
-	*(int32_t *)&cdata->buff[table->rsp_pos] = table->var_cnt * 8;
-	WRITE_OP(add_rsp);
-	WRITE_IM(table->var_cnt * 8, int32_t);
-	WRITE_OP(pop_rbp);
-
-	return 0;
-}
-
+/**
+ * Set function prolog
+ */
 static int func_prolog(comp_data *cdata)
 {
 	CHECK_(!cdata, COMP_NULLPTR_ERR);
@@ -168,6 +180,27 @@ static int func_prolog(comp_data *cdata)
 	return rsp_pos;
 }
 
+/**
+ * Set function epilog
+ */
+static int func_epilog(comp_data *cdata, name_table *table)
+{
+	CHECK_(!cdata, COMP_NULLPTR_ERR);
+	CHECK_(!cdata->buff, COMP_NULL_BUFF);
+	CHECK_(!table, COMP_NULLPTR_ERR);
+
+
+	*(int32_t *)&cdata->buff[table->rsp_pos] = table->var_cnt * 8;
+	WRITE_OP(add_rsp);
+	WRITE_IM(table->var_cnt * 8, int32_t);
+	WRITE_OP(pop_rbp);
+
+	return 0;
+}
+
+/**
+ * Traverse through parse tree and compile
+ */
 int trav_compile
 	(TNODE *node, name_table *table,  comp_data *cdata)
 {
@@ -201,7 +234,10 @@ int trav_compile
 			int addr = TableFind(table, LEFT);
 			if (addr == 0)
 				addr = TableInsert(table, LEFT);
+
+#ifdef 	BACKEND_LOG
 			printf("ASIGN ADDRESS : %d\n", addr);
+#endif
 			WRITE_OP(mov_mrbp_rax);
 			WRITE_IM(addr, int32_t);
 			return 0;
@@ -248,6 +284,9 @@ int trav_compile
 	}
 }
 
+/**
+ * Proccess arithmetic nodes
+ */
 int trav_oper_node(TNODE *node, name_table *table,  comp_data *cdata)
 {
 	VISIT(LEFT);
@@ -292,21 +331,27 @@ int trav_oper_node(TNODE *node, name_table *table,  comp_data *cdata)
 	return 0;
 }
 
+/**
+ * Proccess relation operator nodes
+ */
 int trav_relop_node(TNODE *node, name_table *table, comp_data *cdata)
 {
-		VISIT(LEFT);
-		WRITE_OP(push_rax);
+	VISIT(LEFT);
+	WRITE_OP(push_rax);
 
-		VISIT(RIGHT);
+	VISIT(RIGHT);
 
-		WRITE_OP(mov_rbx_rax);
-		WRITE_OP(pop_rax);
-		WRITE_OP(cmp_rax_rbx);
+	WRITE_OP(mov_rbx_rax);
+	WRITE_OP(pop_rax);
+	WRITE_OP(cmp_rax_rbx);
 
-		set_cmp_cond(node, table, cdata);
-		return 0;
+	set_cmp_cond(node, table, cdata);
+	return 0;
 }
 
+/**
+ * Set cmp condition depending on operator type
+ */
 int set_cmp_cond(TNODE *node, name_table *table,  comp_data *cdata)
 {
 	WRITE_OP(movabs_rax);
@@ -349,6 +394,9 @@ int set_cmp_cond(TNODE *node, name_table *table,  comp_data *cdata)
 
 #define IP		cdata->ip
 
+/**
+ * Proccess if stmt
+ */
 int trav_if_node(TNODE *node, name_table *table,  comp_data *cdata)
 {
 	VISIT(LEFT);
@@ -361,8 +409,10 @@ int trav_if_node(TNODE *node, name_table *table,  comp_data *cdata)
 
 	WRITE_OP(jmp);
 	SET_ENTRY(jmp_skip);	
+#ifdef 	BACKEND_LOG
 	printf("!!!\t%d ***** %d ***** %d\n",
 			cdata->ip, if_dst, 2);
+#endif
 	UPDATE_ENTRY(if_dst);
 
 	VISIT(RIGHT->right);
@@ -372,6 +422,9 @@ int trav_if_node(TNODE *node, name_table *table,  comp_data *cdata)
 	return 0;
 }
 
+/**
+ * Proccess while stmnt
+ */
 int trav_while_node(TNODE *node, name_table *table,  comp_data *cdata)
 {
 	WRITE_OP(jmp);
@@ -391,6 +444,9 @@ int trav_while_node(TNODE *node, name_table *table,  comp_data *cdata)
 	return 0;
 }
 
+/**
+ * Init function arguments in stack
+ */
 static int trav_init_args(TNODE *node, name_table *table)
 {
 	if (LEFT) 
@@ -404,6 +460,9 @@ static int trav_init_args(TNODE *node, name_table *table)
 	return 0;
 }
 
+/**
+ * Define function
+ */
 int trav_funcdef_node(TNODE *node, comp_data *cdata)
 {
 	name_table func_table = {};
@@ -434,6 +493,9 @@ int trav_funcdef_node(TNODE *node, comp_data *cdata)
 		return type;					\
 	} else
 
+/**
+ * Check if function is standart
+ */
 int std_func_check(TNODE *node)
 {
 	if (!node || TYPE(node) != ID)
@@ -446,10 +508,12 @@ int std_func_check(TNODE *node)
 	return -1;
 }
 
-int trav_call_node(TNODE *node, name_table *table,  comp_data *cdata)
+/**
+ * Proccess std fuction call
+ */
+int procces_std_call
+	(TNODE *node, name_table *table,  comp_data *cdata, int func_t)
 {
-	int func_t = std_func_check(LEFT);
-	
 	switch (func_t) {	
 	case STD_SCAN:
 		WRITE_OP(call);
@@ -464,15 +528,24 @@ int trav_call_node(TNODE *node, name_table *table,  comp_data *cdata)
 		LabelLinkAddCall(&cdata->labels, LEFT, 
 			cdata->buff + cdata->ip);
 		WRITE_IM(UNSET_DST, int32_t);
-		//WRITE_IM(STDOUT_FUNC_ADDR - cdata->ip - 4, int32_t);
-
 		return 0;
 	default:
 		break;
 	}
-	
-	
 
+	return 0;
+}
+
+/**
+ * Proccess function call
+ */
+int trav_call_node(TNODE *node, name_table *table,  comp_data *cdata)
+{
+	int func_t = std_func_check(LEFT);
+
+	if(func_t > 0)
+		return procces_std_call(node, table, cdata, func_t);
+	
 	int arg_cnt = 0;
 	TNODE *func_name = LEFT;
 
@@ -494,22 +567,12 @@ int trav_call_node(TNODE *node, name_table *table,  comp_data *cdata)
 	return 0;
 }
 
-int write_std_func(comp_data *cdata)
-{
-	for ( ; cdata->ip != STDOUT_FUNC_ADDR; )
-		WRITE_OP(nop);
 
-	WRITE_OP(std_print);
-
-	for ( ; cdata->ip != STDIN_FUNC_ADDR; )
-		WRITE_OP(nop);
-
-	WRITE_OP(std_read);
-
-	return 0;
-}
-
-// NOTE: do not use LabelLink struct after this function
+/**
+ * Add std functions to LalbelLink and link functions and calls
+ * NOTE: do not use LabelLink struct after this function. You 
+ * dont need it after linking, delete it with LabelLinkDtor()
+ */
 int addstd_n_link(comp_data *cdata)
 {
 	char stdin_name[]  = "Introduce";

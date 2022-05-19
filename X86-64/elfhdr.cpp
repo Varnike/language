@@ -2,9 +2,6 @@
 #include <stdlib.h>
 #include "elfhdr.h"
 
-const unsigned char bytecode[]  = 
-			{0xb8, 0x1, 0x0, 0x0, 0x0, 0xcd, 0x80};
-
 /*
 typedef struct elf64_hdr {
   unsigned char	e_ident[EI_NIDENT];
@@ -92,21 +89,3 @@ int setup_phdr(Elf64_Phdr *phdr)
 	return 0;
 }
 
-#if 0
-int main()
-{
-	Elf64_Ehdr ehdr = {};
-	Elf64_Phdr phdr = {};
-
-	setup_elfhdr(&ehdr);
-	setup_phdr(&phdr);
-
-	char *align = (char *)calloc(8, 1);
-	FILE *out = fopen("out", "wb");
-	fwrite(&ehdr, 1, sizeof(Elf64_Ehdr), out);
-	fwrite(&phdr, 1, sizeof(Elf64_Phdr), out);
-	fwrite(&align, 8, 1, out);
-	fwrite(&bytecode, 7, 1, out);
-	fclose(out);
-}
-#endif

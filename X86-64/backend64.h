@@ -1,3 +1,11 @@
+/**
+ * Backend for Math language
+ *
+ * Compilation from pased tree to Linux X86-64 executable.
+ *
+ * 2022 Enikeev Erik
+ */
+
 #ifndef BACKEND64_H
 #define BACKEND64_H
 
@@ -12,11 +20,17 @@
 #include <elf.h>
 #include "labels_linker.h"
 
-//#define $
-#define  $				printf("< %s >\t%d\n",\
+#ifdef 	BACKEND_LOG
+#define $				printf("< %s >\t%d\n",\
 	       					__func__,__LINE__);
 #define $$				printf("-< %d >-\n",\
 						cdata->ip);
+#else
+
+#define $
+#define $$
+#endif
+
 #define NUM(node_name) 		(uint32_t)(node_name)->data.value.num
 #define STR(node_name) 			(node_name)->data.value.str
 #define TYPE(node_name)			(node_name)->data.data_type
@@ -32,15 +46,23 @@
 						trav_compile(node, newt, cdata);
 #define PRINT(...)			fprintf(file, __VA_ARGS__)
 
+/**
+ * Use int emulation in compiled program. If defined,
+ * last n digits of each number in compiled programm
+ * will be used as n digits after decimal point, where
+ * PRESISION must be set to 10^n.
+ */
 //#define INT_AS_FLOAT
+
+/**
+ * Automatically make programm execitable after compilation.
+ */
 #define AUTO_CHMOD
 
 const int PRESISION = 100;
 const int COMP_BUFF_SIZE = 5048;
 const int UNSET_DST = 0xFFFFFFFF;
 const int UNSET_RSP = 0x1488;
-const int STDOUT_FUNC_ADDR = 4000;
-const int STDIN_FUNC_ADDR = 4100;
 
 
 enum puhs_pop_flag {

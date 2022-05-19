@@ -1,0 +1,55 @@
+# PRESISION = 100, INT_AS_FLOAT defined
+
+y1 = 0;
+y1 = Introduce(1);
+answ = sin(y1);   
+              
+Conclusion(answ);
+
+
+Theorem (Factorial)
+Given (x)
+Proof
+        suppose (x <= 100) perfomed 
+        therefore proven 100;
+        proven x * Factorial(x - 100); 
+QED
+
+Theorem (pow)
+Given (x y)
+Proof
+        suppose (y  == 0) perfomed
+        therefore proven 100;
+
+        mulx = x;
+        Consider {
+                x = x * mulx; 
+                y = y - 100;
+        } assuming expression (y >= 200) perfomed;
+        proven x;
+QED
+
+Theorem (sin)
+Given (x)
+Proof
+        result   = 0;
+        currTerm = 0;
+        minus    = 0;
+
+        Consider {
+                currVal = pow(x currTerm * 200 + 100);
+                #Conclusion(currTerm);
+                currVal = currVal / Factorial(200 * currTerm + 100);
+                suppose (minus == 100) perfomed
+                therefore {
+                        result = result - currVal;
+                        minus = 0;
+                } however {
+                        result = result + currVal;      
+                        minus = 100;
+                }
+                currTerm = currTerm + 100;
+        } assuming expression (currTerm < 10000) perfomed;
+        proven result;
+QED
+$

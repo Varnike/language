@@ -1,0 +1,15 @@
+# INT_AS_FLOAT not defined
+Theorem (Factorial)
+Given (x)
+Proof
+	y = x - 1;
+	suppose (y <= 0) perfomed 
+	therefore proven 1;
+	proven x * Factorial(y); 
+QED
+
+y = 4;
+Introduce(y);
+y = Factorial(y);
+Conclusion(y);
+$

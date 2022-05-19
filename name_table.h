@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include "name_table.h"
 #include "tree.h"
+#include "config.h"
 
 const int MAX_TABLE_SIZE = 10;
 

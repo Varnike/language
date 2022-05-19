@@ -32,7 +32,9 @@ int TableInsert(name_table *table, TNODE *token, int size)
 	CHECK_(table->size >= MAX_TABLE_SIZE, 	NTABLE_OVERFLOW);
 	CHECK_(token == NULL,			TREE_NULL_NODE);
 
+#ifdef BACKEND_LOG
 	printf("\n\nADDING NEW VAR: %.*s\n\n", LEN(token), ID(token));
+#endif
 // SLOW SLOW SLOW SLOW!
 	if (TableFind(table, token) > 0)
 		return ERRNUM = NTABLE_REDEFINE_ERR;
@@ -61,8 +63,11 @@ int TableFind(name_table *table, TNODE *key)
 	for (int it = 0; it != table->size; it++) {
 		if (TYPE(key) == table->data[it].type
 			       	&& table->data[it].name == keyh) {
+#ifdef BACKEND_LOG
 			printf("[found] ADDRESS = %d\n",
 					table->data[it].addr );
+
+#endif
 			return table->data[it].addr;
 		}
 	}	
@@ -99,8 +104,10 @@ int TableAddArg(name_table *table, TNODE *token, int size)
 	table->arg_cnt++;
 	table->data[table->size++] = new_name;
 
+#ifdef BACKEND_LOG
 	printf("\n\nADDING NEW ARG: %.*s, addr = %d\n\n", 
 			LEN(token), ID(token), addr);
+#endif
 
 	return addr;
 }

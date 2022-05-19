@@ -20,6 +20,12 @@ static TNODE *process_if(parsed_arr *token_arr);
 static TNODE *process_return(parsed_arr *token_arr);
 static TNODE *process_while(parsed_arr *token_arr);
 
+/**
+ * Main function which runs lexing, parsing
+ * and compilaton stages.
+ *
+ * namein - name of input file with code
+ */
 int LangProcces(char *namein)
 {
 	textBuff btext = {};
@@ -28,11 +34,11 @@ int LangProcces(char *namein)
 	
 	do {
 		dump_file = fopen("lang_dump.txt", "w");
+
 		CHECK_(dump_file == NULL, FOPEN_ERR);
-
-		init("check_old.txt", &btext);
-
+	
 		init(namein, &btext);
+
 		CHECK_BREAK(ERRNUM);
 
 		src_str = btext.buff;
@@ -70,6 +76,9 @@ int LangProcces(char *namein)
 	return ERRNUM;
 }
 
+/**
+ * Read text from file and init structure with text.
+ */
 int init(const char *file_in, textBuff *btext)
 {
 	CHECK_(!file_in, LANG_NULLPTR_ERR);
@@ -85,6 +94,9 @@ int init(const char *file_in, textBuff *btext)
 	return 0;
 }
 
+/**
+ * Parse text into tokens.
+ */
 int lexer_process(textBuff *btext, parsed_arr *token_arr)
 {
 	CHECK_(btext == nullptr, LANG_NULLPTR_ERR);
@@ -150,6 +162,9 @@ $		if (isspace(*(btext->buff))) {
 	return ERRNUM;
 }
 
+/**
+ * Proccess immediate token.
+ */
 static node_data tokenize_no(textBuff *btext)
 {
 	$
@@ -163,6 +178,9 @@ static node_data tokenize_no(textBuff *btext)
 	return tmp_data;
 }
 
+/**
+ * Proccess id token.
+ */
 static node_data tokenize_id(textBuff *btext)
 {	
 $	node_data tmp_data = {};
@@ -189,6 +207,9 @@ $	node_data tmp_data = {};
 	return tmp_data;
 }
 
+/**
+ * Proccess operator token.
+ */
 static node_data tokenize_op(textBuff *btext)
 {
 $	node_data tmp_data = {};
@@ -213,6 +234,9 @@ $	node_data tmp_data = {};
 	}							\
 	break;
 
+/**
+ * Proccess relation operator token.
+ */
 static node_data tokenize_relop(textBuff *btext)
 {	
 	node_data tmp_data = {};
@@ -243,7 +267,6 @@ static node_data tokenize_relop(textBuff *btext)
 }
 
 #undef RELOP_CMP
-
 static int isOP(char symb)
 {
 $	return (symb == OP_ADD || symb == OP_MUL || symb == OP_DIV || 
@@ -268,7 +291,9 @@ static int isRelop(char symb)
 		return type;					\
 	} else
 
-// Keyword		
+/**
+ * Check keywords.
+ */
 static int isKeyword(node_data ndata) 
 {
 	int size = 0;
@@ -295,7 +320,9 @@ static int isKeyword(node_data ndata)
 }
 
 #undef TERM_CMP
-
+/**
+ * Print tokens(for debug).
+ */
 static void print_token(TNODE *node, FILE *file) 
 {
 	if (!node)
@@ -322,6 +349,9 @@ static void print_token(TNODE *node, FILE *file)
 			node->left, node->right, node->parent);                             
 }
 
+/**
+ * Recursive parsing.
+ */
 TNODE *_GetG(parsed_arr *token_arr)
 {$
 	ERRNUM_CHECK(NULL);
