@@ -1,0 +1,53 @@
+Theorem (Factorial)
+Given (x)
+Proof
+        suppose (x <= 1) perfomed 
+        therefore proven 1;
+        proven x * Factorial(x - 1); 
+QED
+
+Theorem (pow)
+Given (x y)
+Proof
+        suppose (y == 0) perfomed
+        therefore proven 1;
+
+        mulx = x;
+        Consider {
+                x = x * mulx; 
+                y = y - 1;
+        } assuming expression (y >= 2) perfomed;
+        proven x;
+QED
+
+Theorem (sin)
+Given (x)
+Proof
+        result   = 0;
+        currTerm = 0;
+        minus    = 0;
+
+        Consider {
+                currVal = pow(x currTerm * 2 + 1);
+                Conclusion(currVal);
+                currVal = currVal / Factorial(2 * currTerm + 1);
+                suppose (minus == 1) perfomed
+                therefore {
+                        result = result - currVal;
+                        minus = 0;
+                } however {
+                        result = result + currVal;      
+                        minus = 1;
+                }
+                currTerm = currTerm + 1;
+        } assuming expression (currTerm <= 10) perfomed;
+        proven result;
+QED
+
+y = 0;
+Introduce(y);
+y = sin(y);   
+              
+Conclusion(y);
+$             
+

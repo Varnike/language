@@ -90,7 +90,12 @@ const char *errmsg(int errt)
 		"Language bad node for name table error!",
 		"Language name table overflow",
 		"Language redefenition error!",
-		"Language uninitialized variavle!"
+		"Language uninitialized variavle!",
+		"Language double init error!",
+		"Compiler nullptr pointer error!",
+		"Compiler nullptr buffer error!",
+		"Compiler bad data in programm buffer!",
+		"Undefined function call error!"
 	};
 
 	switch (errt/100) {

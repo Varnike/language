@@ -9,7 +9,8 @@
 #include "config.h"
 #include "include/onegin.h"
 #include "name_table.h"
-#include "backend.h"
+#include "backend_asm/backend.h"
+#include "X86-64/backend64.h"
 
 #define  $ 				fprintf(dump_file,		\
 			"< %s >\t%d\n", __func__,__LINE__);
@@ -48,6 +49,7 @@
 #define GetT()				_GetT(token_arr)
 #define GetP()				_GetP(token_arr)
 #define GetN()				_GetN(token_arr)
+#define GetArr()			_GetArr(token_arr)	
 #define GetId()				_GetId(token_arr)
 #define GetRel()			_GetRel(token_arr)
 
@@ -82,6 +84,7 @@ TNODE *_GetT(parsed_arr *tokens);
 TNODE *_GetU(parsed_arr *tokens);
 TNODE *_GetP(parsed_arr *tokens);
 TNODE *_GetN(parsed_arr *tokens);
+TNODE *_GetArr(parsed_arr *tokens);
 TNODE *_GetId(parsed_arr *tokens);
 TNODE *_GetRel(parsed_arr *tokens);
 

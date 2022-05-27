@@ -1,7 +1,7 @@
 #ifndef TERMINALS_H
 #define TERMINALS_H
 
-enum DATA_TYPES {        
+enum KEYWORDS_N_TYPES {        
         CONST        = 0,
         OPER         = 1,
         VAR          = 2,
@@ -31,6 +31,11 @@ enum DATA_TYPES {
 	EXPR         = 26,
 	PERF         = 27,
 	THEREF       = 28,
+	SELECT       = 29,
+	SET          = 30,
+	OF           = 31,
+	ELEM         = 32,
+	ARR_INIT     = 33
 };                     
 
 enum operators {
@@ -61,7 +66,8 @@ enum unary_operators {
 
 enum std_func {
 	STD_SCAN  = 0,
-	STD_PRINT = 1
+	STD_PRINT = 1,
+	STD_SHOW  = 2
 };
 
 #endif // TERMINALS_H

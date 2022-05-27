@@ -1,5 +1,5 @@
 #include "backend.h"
-#include "X86-64/backend64.h"
+#include "../X86-64/backend64.h"
 
 static int asm_if(TNODE *node, name_table *table, FILE *file);
 static int asm_define(TNODE *node, name_table *table, FILE *file);

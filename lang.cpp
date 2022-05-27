@@ -7,7 +7,7 @@ static void connect(TNODE *parent, TNODE *lchild, TNODE *rchild);
 
 static int isTerminalChar(char symb);
 static int isOP(char symb);
-static int isTerm(node_data ndata);
+static int isKeyword(node_data ndata);
 static int isRelop(char symb);
 
 static node_data tokenize_op(textBuff *btext);
@@ -20,6 +20,12 @@ static TNODE *process_if(parsed_arr *token_arr);
 static TNODE *process_return(parsed_arr *token_arr);
 static TNODE *process_while(parsed_arr *token_arr);
 
+/**
+ * Main function which runs lexing, parsing
+ * and compilaton stages.
+ *
+ * namein - name of input file with code
+ */
 int LangProcces(char *namein)
 {
 	textBuff btext = {};
@@ -28,9 +34,11 @@ int LangProcces(char *namein)
 	
 	do {
 		dump_file = fopen("lang_dump.txt", "w");
-		CHECK_(dump_file == NULL, FOPEN_ERR);
 
-		init("check.txt", &btext);
+		CHECK_(dump_file == NULL, FOPEN_ERR);
+	
+		init(namein, &btext);
+
 		CHECK_BREAK(ERRNUM);
 
 		src_str = btext.buff;
@@ -49,8 +57,10 @@ int LangProcces(char *namein)
 		}
 
 		TreeDump(root);
-		
-		LangTranslate(root, "asm.txt");
+		$	
+		//LangTranslate(root, "asm.txt");
+		$
+		lang64_compile(root, "out");
 
 		TreeDtor(root);	
 	} while(0);
@@ -66,6 +76,9 @@ int LangProcces(char *namein)
 	return ERRNUM;
 }
 
+/**
+ * Read text from file and init structure with text.
+ */
 int init(const char *file_in, textBuff *btext)
 {
 	CHECK_(!file_in, LANG_NULLPTR_ERR);
@@ -81,6 +94,9 @@ int init(const char *file_in, textBuff *btext)
 	return 0;
 }
 
+/**
+ * Parse text into tokens.
+ */
 int lexer_process(textBuff *btext, parsed_arr *token_arr)
 {
 	CHECK_(btext == nullptr, LANG_NULLPTR_ERR);
@@ -137,17 +153,18 @@ $		if (isspace(*(btext->buff))) {
 		
 		if (token_arr->size >= MAX_TOKEN_CNT) {
 			ERRNUM = LANG_BUFFER_OVERFLOW;
-			goto err_free_buffer;
+			break;
 		}
 
 		TreeCtor((token_arr->data + token_arr->size++), node_val);
 	}
-
-err_free_buffer:
 	
 	return ERRNUM;
 }
 
+/**
+ * Proccess immediate token.
+ */
 static node_data tokenize_no(textBuff *btext)
 {
 	$
@@ -161,6 +178,9 @@ static node_data tokenize_no(textBuff *btext)
 	return tmp_data;
 }
 
+/**
+ * Proccess id token.
+ */
 static node_data tokenize_id(textBuff *btext)
 {	
 $	node_data tmp_data = {};
@@ -178,7 +198,7 @@ $	node_data tmp_data = {};
 	
 	tmp_data.len  = it;
 	
-	int type = isTerm(tmp_data);	
+	int type = isKeyword(tmp_data);	
 	if (type)
 		tmp_data.data_type = type;
 	else 
@@ -187,6 +207,9 @@ $	node_data tmp_data = {};
 	return tmp_data;
 }
 
+/**
+ * Proccess operator token.
+ */
 static node_data tokenize_op(textBuff *btext)
 {
 $	node_data tmp_data = {};
@@ -211,6 +234,9 @@ $	node_data tmp_data = {};
 	}							\
 	break;
 
+/**
+ * Proccess relation operator token.
+ */
 static node_data tokenize_relop(textBuff *btext)
 {	
 	node_data tmp_data = {};
@@ -241,7 +267,6 @@ static node_data tokenize_relop(textBuff *btext)
 }
 
 #undef RELOP_CMP
-
 static int isOP(char symb)
 {
 $	return (symb == OP_ADD || symb == OP_MUL || symb == OP_DIV || 
@@ -251,7 +276,7 @@ $	return (symb == OP_ADD || symb == OP_MUL || symb == OP_DIV ||
 static int isTerminalChar(char symb)
 {
 	return (symb == '(' || symb == ')' || symb == '{' || symb == '}' 
-			|| symb == ';' || symb == '$');
+			|| symb == ';' || symb == '$' || symb == '[' || symb == ']');
 }
 
 static int isRelop(char symb)
@@ -266,8 +291,10 @@ static int isRelop(char symb)
 		return type;					\
 	} else
 
-		
-static int isTerm(node_data ndata) 
+/**
+ * Check keywords.
+ */
+static int isKeyword(node_data ndata) 
 {
 	int size = 0;
 
@@ -284,12 +311,18 @@ static int isTerm(node_data ndata)
 	TERM_CMP("perfomed",   PERF)
 	TERM_CMP("expression", EXPR)
 	TERM_CMP("therefore",  THEREF)
+	TERM_CMP("Select",     SELECT)
+	TERM_CMP("set",        SET)
+	TERM_CMP("of",         OF)
+	TERM_CMP("elements",   ELEM)
 
 	return 0;
 }
 
 #undef TERM_CMP
-
+/**
+ * Print tokens(for debug).
+ */
 static void print_token(TNODE *node, FILE *file) 
 {
 	if (!node)
@@ -316,6 +349,9 @@ static void print_token(TNODE *node, FILE *file)
 			node->left, node->right, node->parent);                             
 }
 
+/**
+ * Recursive parsing.
+ */
 TNODE *_GetG(parsed_arr *token_arr)
 {$
 	ERRNUM_CHECK(NULL);
@@ -374,6 +410,28 @@ TNODE *_GetStmt(parsed_arr *token_arr)
 		}
 	case WHILE:
 		return process_while(token_arr);
+	case SELECT:
+		{ // TODO in func
+			RequireT(SELECT);
+			RequireT(SET);
+
+			TNODE *arr = GetId();
+
+			RequireT(OF);
+
+			TNODE *size = GetN();
+
+			RequireT(ELEM);
+			Require(';');
+
+
+			CREATE_TYPE_TOKEN(init, ARR_INIT);
+
+			connect(init, arr, NULL);
+			connect(arr, size, NULL);
+
+			return init;
+		}
 	default:
 		TNODE *node = GetE();
 		Require(';');
@@ -397,7 +455,7 @@ static TNODE *process_id(parsed_arr *token_arr)
 
 	IT--;
 
-	TNODE *id = GetId();
+	TNODE *id = GetArr();//GetId();
 	
 	if (!SYMB_MATCH(OPER, OP_ASG))
 		SyntaxError();
@@ -632,7 +690,7 @@ TNODE *_GetP(parsed_arr *token_arr)
 			return GetCallF();
 		}
 		IT--;
-		return GetId();
+		return GetArr();
 	}
 }
 
@@ -645,6 +703,21 @@ TNODE *_GetN(parsed_arr *token_arr)
 	} else {
 		SyntaxError();
 	}
+}
+
+TNODE *_GetArr(parsed_arr *token_arr)
+{
+	TNODE *id = GetId();
+
+	if (ID_MATCH('[')) {
+		Require('[');
+		TNODE *addr = GetRel();
+		Require(']');
+
+		connect(id, addr, NULL);
+	}
+
+	return id;
 }
 
 TNODE *_GetId(parsed_arr *token_arr)

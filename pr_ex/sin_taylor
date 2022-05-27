@@ -1,3 +1,5 @@
+# PRESISION = 100, INT_AS_FLOAT defined
+
 y1 = 0;
 y1 = Introduce(1);
 answ = sin(y1);   
